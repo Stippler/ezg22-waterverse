@@ -3,16 +3,26 @@ cmake_policy(VERSION 3.20)
 project(Engine LANGUAGES C CXX)
 set(CMAKE_CXX_STANDARD 20)
 
-# GLFW
+# find OpenGL
+find_package(OpenGL REQUIRED)
+
+# GLFW configuration
 set(GLFW_BUILD_DOCS OFF)
 set(GLFW_BUILD_TESTS OFF)
 set(GLFW_BUILD_EXAMPLES OFF)
 set(GLFW_BUILD_TESTS OFF)
 set(GLFW_INSTALL OFF)
 
-# set(GLFW_VULKAN_STATIC ON)
+add_subdirectory(external/glew/build/cmake)
 add_subdirectory(external/glfw)
+
+message(STATUS "Installing glm via submodule")
+set(BUILD_STATIC_LIBS ON)
+add_subdirectory(external/glm)
+set_property(TARGET glm_static PROPERTY FOLDER "Dependencies")
+
 set_property(TARGET glfw PROPERTY FOLDER "Dependencies")
+
 
 file(GLOB_RECURSE FILE_SOURCES RELATIVE
     ${CMAKE_CURRENT_SOURCE_DIR}
@@ -33,21 +43,24 @@ add_executable(
     "${FILE_SOURCES}"
 )
 
-find_package(OpenGL REQUIRED)
-
 target_include_directories( 
-    ${PROJECT_NAME}
-    PUBLIC external/glfw/include
+    ${PROJECT_NAME} PUBLIC
+    external/glfw/include
+    external/glew/include
+    external/glm
     ${OPENGL_INCLUDE_DIRS}
 )
 
-target_link_directories(${PROJECT_NAME}
-    PRIVATE external/glfw/src
+target_link_directories(
+    ${PROJECT_NAME} PRIVATE 
+    external/glfw/src
 )
 
 target_link_libraries(
     ${PROJECT_NAME}
     glfw
+    glew_s
+    glm::glm
     ${OPENGL_LIBRARIES}
 )
 
