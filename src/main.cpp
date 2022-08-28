@@ -105,6 +105,8 @@ int main(const int argc, const char **argv)
     glm::mat4 proj = glm::perspective(glm::radians(45.0f), (float)Window::getWidth() / (float)Window::getHeight(), 0.1f, 100.0f);
 
     unsigned int textureId = create_texture();
+
+    stbi_set_flip_vertically_on_load(true);
     Shader ourShader("../assets/shaders/vertex.vert", "../assets/shaders/fragment.frag");
     Model ourModel("../assets/models/backpack/backpack.obj");
 
@@ -175,7 +177,6 @@ int main(const int argc, const char **argv)
 
             glDrawArrays(GL_TRIANGLES, 0, 36);
         }
-
         ourModel.Draw(ourShader);
 
         //glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
