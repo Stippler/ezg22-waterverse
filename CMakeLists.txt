@@ -13,6 +13,10 @@ set(GLFW_BUILD_EXAMPLES OFF)
 set(GLFW_BUILD_TESTS OFF)
 set(GLFW_INSTALL OFF)
 
+# Assimp configuration
+
+
+add_subdirectory(external/assimp)
 add_subdirectory(external/glew/build/cmake)
 add_subdirectory(external/glfw)
 
@@ -45,6 +49,7 @@ add_executable(
 
 target_include_directories( 
     ${PROJECT_NAME} PUBLIC
+    external/assimp/include
     external/glfw/include
     external/glew/include
     external/glm
@@ -58,6 +63,7 @@ target_link_directories(
 
 target_link_libraries(
     ${PROJECT_NAME}
+    assimp
     glfw
     glew_s
     glm::glm
