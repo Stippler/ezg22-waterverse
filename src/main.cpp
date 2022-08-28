@@ -1,6 +1,8 @@
+#include "Window.h"
+
 #include <GL/glew.h>
 #include <GL/gl.h>
-#include <GLFW/glfw3.h>
+
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -15,86 +17,11 @@
 #include "Camera.h"
 #include "Shader.h"
 
-
-// TODO REFACTOR
-// -----------------------------------
-Camera *camera = nullptr;
-static bool mouseEnabled;
-static double lastX = 400;
-static double lastY = 300;
-
-static void mouseMoveCallback(GLFWwindow* window, double xpos, double ypos) {
-    if (mouseEnabled) {
-        float xoffset = xpos - lastX;
-        float yoffset = lastY - ypos; // reversed since y-coordinates range from bottom to top
-        lastX = xpos;
-        lastY = ypos;
-        
-        const float sensitivity = 10.f;
-        camera->processMouseMovement(xoffset * sensitivity , yoffset * sensitivity);
-    }
-}
-
-static void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
-    int state = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT);
-    if (state == GLFW_PRESS)
-    {
-        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-        
-        if (glfwRawMouseMotionSupported())
-            glfwSetInputMode(window, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
-        
-        glfwGetCursorPos(window, &lastX, &lastY);
-        // set global camera for callback
-        mouseEnabled=true;
-    }
-    if(state == GLFW_RELEASE) {
-        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-        mouseEnabled=false;
-    }
-}
-// -----------------------------------
-
-
-void framebuffer_size_callback(GLFWwindow *window, int width, int height);
-void processInput(GLFWwindow *window);
 unsigned int create_texture();
-
-bool wireframe = false;
-int width = 800;
-int height = 600;
-
-GLFWwindow *window = nullptr;
 
 int main(const int argc, const char **argv)
 {
-    Camera temp(-2, 0, 0);
-    camera = &temp;
-
-    // initialize glfw and set hints
-    if (!glfwInit())
-    {
-        std::cerr << "Error occured when initializing glfw" << std::endl;
-        return -1;
-    }
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-    // create a glfw window
-    window = glfwCreateWindow(800, 600, "Waterverse", NULL, NULL);
-    if (window == NULL)
-    {
-        std::cout << "Failed to create GLFW window" << std::endl;
-        glfwTerminate();
-        return -1;
-    }
-
-    // set created window as current context
-    glfwMakeContextCurrent(window);
-
-    glfwSetMouseButtonCallback(window, mouseButtonCallback);
-    glfwSetCursorPosCallback(window, mouseMoveCallback);
+    Window::init();
 
     glewExperimental = true;
     GLenum err = glewInit();
@@ -105,9 +32,6 @@ int main(const int argc, const char **argv)
         return -2;
     }
 
-    // set viewport
-    glViewport(0, 0, width, height);
-    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
     float vertices[] = {
         -0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
@@ -177,7 +101,7 @@ int main(const int argc, const char **argv)
     // note that we're translating the scene in the reverse direction of where we want to move
     view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
 
-    glm::mat4 proj = glm::perspective(glm::radians(45.0f), (float)width / (float)height, 0.1f, 100.0f);
+    glm::mat4 proj = glm::perspective(glm::radians(45.0f), (float)Window::getWidth() / (float)Window::getHeight(), 0.1f, 100.0f);
 
     unsigned int textureId = create_texture();
     Shader ourShader("../assets/shaders/vertex.vert", "../assets/shaders/fragment.frag");
@@ -217,10 +141,10 @@ int main(const int argc, const char **argv)
     glEnable(GL_DEPTH_TEST);
 
     // render loop
-    while (!glfwWindowShouldClose(window))
+    while (!Window::shouldClose())
     {
         // input
-        processInput(window);
+        Window::processInput();
 
         // rendering commands here
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
@@ -235,8 +159,8 @@ int main(const int argc, const char **argv)
         //glDrawArrays(GL_TRIANGLES, 0, 36);
         glBindVertexArray(VAO);
 
-        auto pos = camera->getPosition();
-        auto viewMatrix = camera->getViewMatrix();
+        auto pos = Window::getCamera()->getPosition();
+        auto viewMatrix = Window::getCamera()->getViewMatrix();
         ourShader.setMat4("view", viewMatrix);
 
         for (unsigned int i = 0; i < 10; i++)
@@ -253,109 +177,12 @@ int main(const int argc, const char **argv)
         //glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
         glBindVertexArray(0);
         // check and call events and swap the buffersprocessInput(window);
-
-        glfwSwapBuffers(window);
-        glfwPollEvents();
+        Window::swapBuffers();
     }
 
-    // terminate glfw after done
-    glfwTerminate();
     return 0;
 }
 
-void framebuffer_size_callback(GLFWwindow *window, int width, int height)
-{
-    glViewport(0, 0, width, height);
-}
-
-void processInput(GLFWwindow *window)
-{
-    // TODO add map:
-    /*
-    map = {
-        GLFW_KEY: {
-            boolean
-            function // executed when boolean!=getKey && getKey==press
-                     // then boolean=getKey
-        }
-    }
-    */
-    float currentFrame = glfwGetTime();
-    static float lastFrame = glfwGetTime();
-    float deltaTime = currentFrame - lastFrame;
-    lastFrame = currentFrame;
-
-    // throttle to 30 fps
-    if (deltaTime > 1.0f / 30.0f)
-    {
-        //std::cout << "Info: input polled less than 30 times per second" << std::endl;
-        deltaTime = 1.0f / 30.0f;
-    }
-
-    if (camera)
-    {
-        auto glfWwindow = window;
-        // TODO handle input for camera
-        if (glfwGetKey(glfWwindow, GLFW_KEY_W) == GLFW_PRESS)
-        {
-            camera->moveForward(deltaTime);
-        }
-        if (glfwGetKey(glfWwindow, GLFW_KEY_S) == GLFW_PRESS)
-        {
-            camera->moveBackward(deltaTime);
-        }
-        if (glfwGetKey(glfWwindow, GLFW_KEY_A) == GLFW_PRESS)
-        {
-            camera->moveLeft(deltaTime);
-        }
-        if (glfwGetKey(glfWwindow, GLFW_KEY_D) == GLFW_PRESS)
-        {
-            camera->moveRight(deltaTime);
-        }
-        if (glfwGetKey(glfWwindow, GLFW_KEY_SPACE) == GLFW_PRESS)
-        {
-            camera->moveUp(deltaTime);
-        }
-        if (glfwGetKey(glfWwindow, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
-        {
-            camera->moveDown(deltaTime);
-        }
-        if (glfwGetKey(glfWwindow, GLFW_KEY_UP) == GLFW_PRESS)
-        {
-            camera->processMouseMovement(0, 180.f * 2 * deltaTime);
-        }
-        if (glfwGetKey(glfWwindow, GLFW_KEY_DOWN) == GLFW_PRESS)
-        {
-            camera->processMouseMovement(0, -180.f * 2 * deltaTime);
-        }
-        if (glfwGetKey(glfWwindow, GLFW_KEY_LEFT) == GLFW_PRESS)
-        {
-            camera->processMouseMovement(-360.f * 2 * deltaTime, 0);
-        }
-        if (glfwGetKey(glfWwindow, GLFW_KEY_RIGHT) == GLFW_PRESS)
-        {
-            camera->processMouseMovement(360.f * 2 * deltaTime, 0);
-        }
-    }
-
-    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-    {
-        glfwSetWindowShouldClose(window, true);
-    }
-
-    if (glfwGetKey(window, GLFW_KEY_F1) == GLFW_PRESS)
-    {
-        wireframe = !wireframe;
-        if (!wireframe)
-        {
-            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-        }
-        else if (wireframe)
-        {
-            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-        }
-    }
-}
 
 unsigned int create_texture()
 {
