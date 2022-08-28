@@ -106,7 +106,7 @@ int main(const int argc, const char **argv)
 
     unsigned int textureId = create_texture();
     Shader ourShader("../assets/shaders/vertex.vert", "../assets/shaders/fragment.frag");
-    Model ourModel("C:/Users/chris/Desktop/backpack/backpack.obj");
+    Model ourModel("../assets/models/backpack/backpack.obj");
 
     unsigned int VAO;
     glGenVertexArrays(1, &VAO);
@@ -175,6 +175,8 @@ int main(const int argc, const char **argv)
 
             glDrawArrays(GL_TRIANGLES, 0, 36);
         }
+
+        ourModel.Draw(ourShader);
 
         //glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
         glBindVertexArray(0);
