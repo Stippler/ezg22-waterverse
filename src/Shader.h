@@ -8,15 +8,17 @@
 #include <iostream>
 #include <sstream>
 #include <glm/gtc/type_ptr.hpp>
+#include "Watchable.h"
 
 // Add Filewatcher and reload shader on change
-class Shader
+class Shader: Watchable
 {
 public:
-    unsigned int ID;
     // constructor generates the shader on the fly
     // ------------------------------------------------------------------------
     Shader(const char *vertexPath, const char *fragmentPath);
+
+    bool reload();
     // activate the shader
     // ------------------------------------------------------------------------
     void use();
@@ -31,7 +33,11 @@ public:
     void setMat4(const GLchar* name, glm::mat4 matrix);
 
 private:
+    unsigned int id;
+
+    const char *vertexPath;
+    const char *fragmentPath;
     // utility function for checking shader compilation/linking errors.
     // ------------------------------------------------------------------------
-    void checkCompileErrors(unsigned int shader, std::string type);
+    bool checkCompileErrors(unsigned int shader, std::string type);
 };
