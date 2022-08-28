@@ -1,3 +1,5 @@
+#define STB_IMAGE_IMPLEMENTATION
+
 #include "Window.h"
 
 #include <GL/glew.h>
@@ -10,9 +12,8 @@
 #include <sstream>
 #include <unordered_map>
 
+#include "Model.h"
 
-#define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
 
 #include "Camera.h"
 #include "Shader.h"
@@ -105,6 +106,7 @@ int main(const int argc, const char **argv)
 
     unsigned int textureId = create_texture();
     Shader ourShader("../assets/shaders/vertex.vert", "../assets/shaders/fragment.frag");
+    Model ourModel("C:/Users/chris/Desktop/backpack/backpack.obj");
 
     unsigned int VAO;
     glGenVertexArrays(1, &VAO);
