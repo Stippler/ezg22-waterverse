@@ -26,10 +26,12 @@ public:
     void processMouseMovement(float xoffset, float yoffset);
 
 private:
+    void updateAngle();
+
     // camera Attributes
-    glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
-    glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
-    glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+    glm::vec3 cameraPos;
+    glm::vec3 cameraFront;
+    glm::vec3 cameraUp;
 
     // const glm::vec3 front = glm::vec3(0.0f, 0.0f, -1.0f);
     glm::vec3 worldUp = glm::vec3(0.0f, 1.0f, 0.0f);
@@ -37,7 +39,7 @@ private:
     float yaw{};
     float pitch{};
 
-    float mouseSensitivity= 0.03f;
+    float mouseSensitivity= 0.3f;
 
     float movementSpeed = 5.0f;
 };

@@ -14,34 +14,39 @@ int width = 800;
 int height = 600;
 
 // Callbacks
-void mouseMoveCallback(GLFWwindow* window, double xpos, double ypos) {
-    if (mouseEnabled) {
-        float xoffset = xpos - lastX;
-        float yoffset = lastY - ypos; // reversed since y-coordinates range from bottom to top
-        lastX = xpos;
-        lastY = ypos;
-        
-        const float sensitivity = 10.f;
-        camera->processMouseMovement(xoffset * sensitivity , yoffset * sensitivity);
+void mouseMoveCallback(GLFWwindow *window, double xpos, double ypos)
+{
+    float xoffset = xpos - lastX;
+    float yoffset = lastY - ypos; // reversed since y-coordinates range from bottom to top
+    lastX = xpos;
+    lastY = ypos;
+    if (mouseEnabled)
+    {
+        // const float sensitivity = 10.f;
+        camera->processMouseMovement(xoffset, yoffset);
     }
 }
 
-void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
+void mouseButtonCallback(GLFWwindow *window, int button, int action, int mods)
+{
     int state = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT);
     if (state == GLFW_PRESS)
     {
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-        
+
         if (glfwRawMouseMotionSupported())
+        {
             glfwSetInputMode(window, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
-        
+        }
+
         glfwGetCursorPos(window, &lastX, &lastY);
         // set global camera for callback
-        mouseEnabled=true;
+        mouseEnabled = true;
     }
-    if(state == GLFW_RELEASE) {
+    if (state == GLFW_RELEASE)
+    {
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-        mouseEnabled=false;
+        mouseEnabled = false;
     }
 }
 
@@ -131,14 +136,14 @@ void Window::processInput()
     }
 }
 
-void Window::init() {
-    if(camera!=nullptr) {
+void Window::init()
+{
+    if (camera != nullptr)
+    {
         // init has been called twice
         throw std::exception();
     }
     camera = new Camera(-2, 0, 0);
-    // Camera temp(-2, 0, 0);
-    // camera = &temp;
 
     // initialize glfw and set hints
     if (!glfwInit())
@@ -170,29 +175,35 @@ void Window::init() {
     glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
 }
 
-void Window::swapBuffers() {
+void Window::swapBuffers()
+{
     glfwSwapBuffers(window);
 }
 
-void Window::cleanup() {
+void Window::cleanup()
+{
     delete camera;
 
     // terminate glfw after done
     glfwTerminate();
 }
 
-float Window::getWidth() {
+float Window::getWidth()
+{
     return width;
 }
 
-float Window::getHeight() {
+float Window::getHeight()
+{
     return height;
 }
 
-bool Window::shouldClose() {
+bool Window::shouldClose()
+{
     return glfwWindowShouldClose(window);
 }
 
-Camera* Window::getCamera() {
+Camera *Window::getCamera()
+{
     return camera;
 }
