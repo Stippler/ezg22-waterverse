@@ -1,2 +1,4 @@
 build
 assets/models
+.vs
+.vscode

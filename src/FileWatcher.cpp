@@ -6,14 +6,21 @@
 #include <filesystem>
 
 std::mutex addShaderMutex{};
+std::jthread fileWatcher;
 
 struct FileInfo
 {
     std::filesystem::path path;
     std::filesystem::file_time_type lastWriteTime;
+    std::function<void()> callback;
+
+    FileInfo(std::string file, std::function<void()> callback) : path(file), callback(callback)
+    {
+        lastWriteTime = std::filesystem::last_write_time(path);
+    }
 };
 
-std::unordered_map<std::string, FileInfo> files;
+std::vector<FileInfo*> files;
 
 void watchFiles(std::stop_token stoken)
 {
@@ -23,28 +30,35 @@ void watchFiles(std::stop_token stoken)
     {
         std::this_thread::sleep_for(delay);
         addShaderMutex.lock();
-        for (auto &pair : files)
+        for (auto &file : files)
         {
-            auto info = pair.second;
-            auto currentFileLastWriteTime = std::filesystem::last_write_time(info.path);
-            if (currentFileLastWriteTime != info.lastWriteTime)
+            auto info = file;
+            auto currentFileLastWriteTime = std::filesystem::last_write_time(info->path);
+            if (currentFileLastWriteTime != info->lastWriteTime)
             {
-                // TODO
+                file->callback();
+                file->lastWriteTime = currentFileLastWriteTime;
             }
         }
         addShaderMutex.unlock();
     }
-    std::cout << "Stopped file watcher" << std::endl;
 }
 
 void FileWatcher::start()
 {
+    fileWatcher = std::jthread(watchFiles);
 }
 
 void FileWatcher::stop()
 {
+    fileWatcher.request_stop();
+    fileWatcher.join();
 }
 
-void FileWatcher::add(std::string file)
+void FileWatcher::add(std::string file, std::function<void()> callback)
 {
+    FileInfo *info = new FileInfo(file, callback);
+    addShaderMutex.lock();
+    files.push_back(info);
+    addShaderMutex.unlock();
 }

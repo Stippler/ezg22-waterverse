@@ -12,12 +12,14 @@
 #include <sstream>
 #include <unordered_map>
 
+#include "FileWatcher.h"
 #include "Model.h"
 
 #include "Camera.h"
 #include "Shader.h"
 
 unsigned int create_texture();
+void loadShader();
 
 int main(const int argc, const char **argv)
 {
@@ -31,7 +33,6 @@ int main(const int argc, const char **argv)
         std::cerr << "Could not initialize GLEW" << std::endl;
         return -2;
     }
-
 
     float vertices[] = {
         -0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
@@ -104,8 +105,26 @@ int main(const int argc, const char **argv)
     glm::mat4 proj = glm::perspective(glm::radians(45.0f), (float)Window::getWidth() / (float)Window::getHeight(), 0.1f, 100.0f);
 
     unsigned int textureId = create_texture();
-    Shader ourShader("../assets/shaders/vertex.vert", "../assets/shaders/fragment.frag");
-    Model ourModel("../assets/models/backpack/backpack.obj");
+
+    stbi_set_flip_vertically_on_load(true);
+
+    FileWatcher::start();
+
+    const char *vertexShader = "../assets/shaders/vertex.vert";
+    const char *fragmentShader = "../assets/shaders/fragment.frag";
+    Shader ourShader(vertexShader, fragmentShader);
+    bool reloadShader = false;
+    FileWatcher::add(vertexShader, [&]()
+                     { reloadShader = true; });
+    FileWatcher::add(fragmentShader, [&]()
+                     { reloadShader = true; });
+
+    const char *modelPath = "../assets/models/backpack/backpack.obj";
+
+    Model ourModel(modelPath);
+    bool reloadModel = false;
+    FileWatcher::add(modelPath, [&]()
+                     { reloadModel = true; });
 
     unsigned int VAO;
     glGenVertexArrays(1, &VAO);
@@ -132,11 +151,13 @@ int main(const int argc, const char **argv)
 
     ourShader.use();
 
-    unsigned int modelLoc = glGetUniformLocation(ourShader.ID, "model");
+    unsigned int modelLoc, viewLoc, projectionLoc;
+
+    modelLoc = glGetUniformLocation(ourShader.ID, "model");
     glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-    unsigned int viewLoc = glGetUniformLocation(ourShader.ID, "view");
+    viewLoc = glGetUniformLocation(ourShader.ID, "view");
     glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
-    unsigned int projectionLoc = glGetUniformLocation(ourShader.ID, "projection");
+    projectionLoc = glGetUniformLocation(ourShader.ID, "projection");
     glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(proj));
 
     glEnable(GL_DEPTH_TEST);
@@ -144,6 +165,23 @@ int main(const int argc, const char **argv)
     // render loop
     while (!Window::shouldClose())
     {
+        if (reloadShader)
+        {
+            ourShader.reload();
+            ourShader.use();
+
+            modelLoc = glGetUniformLocation(ourShader.ID, "model");
+            glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+            viewLoc = glGetUniformLocation(ourShader.ID, "view");
+            glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
+            projectionLoc = glGetUniformLocation(ourShader.ID, "projection");
+            glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(proj));
+        }
+        if (reloadModel)
+        {
+            ourModel.reload();
+        }
+
         // input
         Window::processInput();
 
@@ -175,7 +213,7 @@ int main(const int argc, const char **argv)
             glDrawArrays(GL_TRIANGLES, 0, 36);
         }
 
-        ourModel.Draw(ourShader);
+        ourModel.draw(ourShader);
 
         //glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
         glBindVertexArray(0);
@@ -183,9 +221,10 @@ int main(const int argc, const char **argv)
         Window::swapBuffers();
     }
 
+    FileWatcher::stop();
+
     return 0;
 }
-
 
 unsigned int create_texture()
 {

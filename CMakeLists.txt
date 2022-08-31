@@ -14,7 +14,10 @@ set(GLFW_BUILD_TESTS OFF)
 set(GLFW_INSTALL OFF)
 
 # Assimp configuration
-
+set(ZLIB_LIBRARIES zlibstatic)
+set(BUILD_STATIC_LIB ON)
+set(BUILD_ASSIMP_TOOLS  ON)
+set(ASSIMP_BUILD_STATIC_LIB ON)
 
 add_subdirectory(external/assimp)
 add_subdirectory(external/glew/build/cmake)

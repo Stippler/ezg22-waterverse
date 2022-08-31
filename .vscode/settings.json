@@ -1,6 +1,14 @@
 {
     "files.associations": {
         "iostream": "cpp",
-        "stop_token": "cpp"
+        "stop_token": "cpp",
+        "atomic": "cpp",
+        "*.tcc": "cpp",
+        "compare": "cpp",
+        "optional": "cpp",
+        "numeric": "cpp",
+        "sstream": "cpp",
+        "cmath": "cpp",
+        "thread": "cpp"
 }
 }

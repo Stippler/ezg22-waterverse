@@ -69,7 +69,7 @@ bool Shader::reload()
     {
         return false;
     }
-    id = newId;
+    ID = newId;
     // delete the shaders as they're linked into our program now and no longer necessary
     glDeleteShader(vertex);
     glDeleteShader(fragment);
@@ -80,28 +80,28 @@ bool Shader::reload()
 // ------------------------------------------------------------------------
 void Shader::use()
 {
-    glUseProgram(id);
+    glUseProgram(ID);
 }
 // utility uniform functions
 // ------------------------------------------------------------------------
 void Shader::setBool(const std::string &name, bool value) const
 {
-    glUniform1i(glGetUniformLocation(id, name.c_str()), (int)value);
+    glUniform1i(glGetUniformLocation(ID, name.c_str()), (int)value);
 }
 // ------------------------------------------------------------------------
 void Shader::setInt(const std::string &name, int value) const
 {
-    glUniform1i(glGetUniformLocation(id, name.c_str()), value);
+    glUniform1i(glGetUniformLocation(ID, name.c_str()), value);
 }
 // ------------------------------------------------------------------------
 void Shader::setFloat(const std::string &name, float value) const
 {
-    glUniform1f(glGetUniformLocation(id, name.c_str()), value);
+    glUniform1f(glGetUniformLocation(ID, name.c_str()), value);
 }
 
 void Shader::setMat4(const GLchar *name, glm::mat4 matrix)
 {
-    unsigned int projectionLoc = glGetUniformLocation(id, name);
+    unsigned int projectionLoc = glGetUniformLocation(ID, name);
     glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(matrix));
 }
 
