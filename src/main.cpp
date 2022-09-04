@@ -38,7 +38,7 @@ int main(const int argc, const char **argv)
     }
 
     
-    unsigned int textureId = createTexture();
+    //unsigned int textureId = createTexture();
 
     stbi_set_flip_vertically_on_load(true);
 
