@@ -21,7 +21,6 @@
 
 #include "Renderer.h"
 
-unsigned int createTexture();
 void loadShader();
 
 int main(const int argc, const char **argv)
@@ -36,12 +35,7 @@ int main(const int argc, const char **argv)
         std::cerr << "Could not initialize GLEW" << std::endl;
         return -2;
     }
-
     
-    //unsigned int textureId = createTexture();
-
-    stbi_set_flip_vertically_on_load(true);
-
     FileWatcher::start();
     Renderer::init();
 
