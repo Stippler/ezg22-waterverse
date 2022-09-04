@@ -4,6 +4,7 @@
 #include <unordered_map>
 #include <iostream>
 #include <filesystem>
+#include <exception>
 
 std::mutex addShaderMutex{};
 std::jthread fileWatcher;
@@ -16,11 +17,15 @@ struct FileInfo
 
     FileInfo(std::string file, std::function<void()> callback) : path(file), callback(callback)
     {
+        if(!std::filesystem::exists(file)){
+            std::cerr << "File does not exist: " << file << std::endl;
+            throw std::exception();
+        }
         lastWriteTime = std::filesystem::last_write_time(path);
     }
 };
 
-std::vector<FileInfo*> files;
+std::vector<FileInfo *> files;
 
 void watchFiles(std::stop_token stoken)
 {
@@ -53,6 +58,11 @@ void FileWatcher::stop()
 {
     fileWatcher.request_stop();
     fileWatcher.join();
+
+    for (auto info : files)
+    {
+        delete info;
+    }
 }
 
 void FileWatcher::add(std::string file, std::function<void()> callback)
