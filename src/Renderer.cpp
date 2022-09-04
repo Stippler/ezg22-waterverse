@@ -29,6 +29,34 @@ void initOurShader();
 Model *ourModel;
 std::vector<Cube> cubes;
 
+struct Light{
+    glm::vec3 position;
+    glm::vec3 ambient;
+    glm::vec3 diffuse;
+    glm::vec3 specular;
+
+    Light(glm::vec3 position, glm::vec3 ambient, glm::vec3 diffuse, glm::vec3 specular){
+        this->position = position;
+        this->ambient = ambient;
+        this->diffuse = diffuse;
+        this->specular = specular;
+    }
+};
+
+struct Material{
+    glm::vec3 ambient;
+    glm::vec3 diffuse;
+    glm::vec3 specular;
+    float shininess;
+
+    Material(glm::vec3 ambient, glm::vec3 diffuse, glm::vec3 specular, float shininess){
+        this->ambient = ambient;
+        this->diffuse = diffuse;
+        this->specular = specular;
+        this->shininess = shininess;
+    }
+};
+
 void initGBuffer()
 {
     unsigned int gAlbedoSpec;
@@ -88,9 +116,23 @@ void Renderer::init()
     cubes.push_back(*new Cube("../assets/container.jpg", glm::vec3(2.0f, 5.0f, -15.0f)));
     cubes.push_back(*new Cube("../assets/container.jpg", glm::vec3(-1.5f, -2.2f, -2.5f)));   
 
-    stbi_set_flip_vertically_on_load(true);
+    //stbi_set_flip_vertically_on_load(true);
 
-    ourModel = new Model("../assets/models/backpack/backpack.obj");
+    ourModel = new Model("../assets/models/beach_umbrella/12984_beach_umbrella_v1_L2.obj");
+
+    Light light(glm::vec3(1.2f, 1.0f, 2.0f), glm::vec3(0.2f, 0.2f, 0.2f), glm::vec3(0.5f, 0.5f, 0.5f), glm::vec3(1.0f, 1.0f, 1.0f));
+    ourShader->setVec3("light.ambient", light.ambient);
+    ourShader->setVec3("light.diffuse", light.diffuse);
+    ourShader->setVec3("light.specular", light.specular);
+    ourShader->setVec3("light.position", light.position);
+    glm::vec3 viewPos = Window::getCamera()->getPosition();
+    ourShader->setVec3("viewPos", viewPos);
+
+    Material coral(glm::vec3(1.0f, 0.5f, 0.31f), glm::vec3(1.0f, 0.5f, 0.31f), glm::vec3(0.5f, 0.5f, 0.5f), 32.0f);
+    ourShader->setVec3("material.ambient", coral.ambient);
+    ourShader->setVec3("material.diffuse", coral.diffuse);
+    ourShader->setVec3("material.specular", coral.specular);
+    ourShader->setFloat("material.shininess", coral.shininess);
 
     glEnable(GL_DEPTH_TEST);
 }
@@ -109,12 +151,16 @@ void Renderer::render()
     ourShader->use();
     auto viewMatrix = Window::getCamera()->getViewMatrix();
     ourShader->setMat4("view", viewMatrix);
+    glm::vec3 viewPos = Window::getCamera()->getPosition();
+    ourShader->setVec3("viewPos", viewPos);
 
     for (unsigned int i = 0; i < cubes.size(); i++)
     {
         cubes[i].draw(*ourShader);
     }
 
+    glm::mat4 mod = glm::mat4(1.0f);
+    ourShader->setMat4("model", glm::scale(mod,glm::vec3(.2,.2,.2)));
     ourModel->draw(*ourShader);
     for (auto cube : cubes)
     {

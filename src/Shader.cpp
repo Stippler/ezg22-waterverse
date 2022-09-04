@@ -105,6 +105,18 @@ void Shader::setMat4(const GLchar *name, glm::mat4 matrix)
     glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(matrix));
 }
 
+void Shader::setVec3(const GLchar *name, glm::vec3 &vector)
+{
+    unsigned int projectionLoc = glGetUniformLocation(ID, name);
+    glUniform3fv(projectionLoc, 1, &vector[0]);
+}
+
+void Shader::setFloat(const GLchar *name, float value)
+{
+    unsigned int projectionLoc = glGetUniformLocation(ID, name);
+    glUniform1f(projectionLoc, value);
+}
+
 // utility function for checking shader compilation/linking errors.
 // ------------------------------------------------------------------------
 bool Shader::checkCompileErrors(unsigned int shader, std::string type)

@@ -34,6 +34,10 @@ public:
 
     void setMat4(const GLchar* name, glm::mat4 matrix);
 
+    void setVec3(const GLchar* name, glm::vec3 &vector);
+
+    void setFloat(const GLchar *name, float value);
+
 private:
 
     const char *vertexPath;
