@@ -8,31 +8,34 @@
 
 std::mutex addModelMutex{};
 std::unordered_map<std::string, Model *> models{};
+std::jthread modelLoader;
 
-SafeQueue<Model*> loadedModels;
+SafeQueue<std::string> pathQueue;
 
-
-void loadModels(std::stop_token stoken) {
+void loadModels(std::stop_token stoken)
+{
     while (!stoken.stop_requested())
     {
-        std::string path = "ledl";
-        Model *model = new Model(path);
+        std::string path;
+        if(pathQueue.ConsumeSync(path)){
+            Model *model = new Model(path);
 
-        addModelMutex.lock();
-        auto it = models.find(path);
-        if (it != models.end())
-        {
-            Model *oldModel = it->second;
-            delete oldModel;
-            it->second = model;
-            std::cout << "reloaded " << path << std::endl;
+            addModelMutex.lock();
+            auto it = models.find(path);
+            if (it != models.end())
+            {
+                Model *oldModel = it->second;
+                delete oldModel;
+                it->second = model;
+                std::cout << "reloaded " << path << std::endl;
+            }
+            else
+            {
+                models.emplace(path, model);
+                std::cout << "loaded " << path << std::endl;
+            }
+            addModelMutex.unlock();
         }
-        else
-        {
-            models.emplace(path, model);
-            std::cout << "loaded " << path << std::endl;
-        }
-        addModelMutex.unlock();
     }
 }
 
@@ -40,17 +43,21 @@ void ModelLoader::addModel(std::string path)
 {
     assert(models.find(path) == models.end());
 
-    // TODO: bool gamma
-    
-
-    // TODO: discuss this hack add file to FileWatcher
-    // std::thread t1(callback);
-    // t1.detach();
-
-    // FileWatcher::add(path, callback);
+    pathQueue.Produce(std::move(std::string(path)));
+    FileWatcher::add(path, [=](){
+        pathQueue.Produce(std::move(std::string(path)));
+    });
 }
 
-void ModelLoader::free() {
+void ModelLoader::start()
+{
+    modelLoader = std::jthread(loadModels);
+}
+
+void ModelLoader::stop()
+{
+    modelLoader.request_stop();
+    modelLoader.join();
     for (auto &pair : models)
     {
         delete pair.second;

@@ -10,7 +10,7 @@
 #include "Window.h"
 #include "Shader.h"
 #include "FileWatcher.h"
-#include "ModelLoader.h"
+#include "Model.h"
 
 glm::mat4 model = glm::mat4(1.0f);
 glm::mat4 view = glm::mat4(1.0f);
@@ -24,6 +24,8 @@ unsigned int modelLoc, viewLoc, projectionLoc;
 // predefines
 void initCubes();
 void initOurShader();
+
+// Model *ourModel;
 
 void Renderer::init()
 {
@@ -42,8 +44,9 @@ void Renderer::init()
 
     initCubes();
 
-    const char *modelPath = "../assets/models/backpack/backpack.obj";
-    ModelLoader::addModel(modelPath);
+    // const char *modelPath = "../assets/models/backpack/backpack.obj";
+    // ourModel = new Model(modelPath);
+    // ModelLoader::addModel(modelPath);
 }
 
 void Renderer::render()
@@ -53,11 +56,8 @@ void Renderer::render()
         ourShader->reload();
         initOurShader();
     }
-    ModelLoader::renderAll([](Model *model) {
-        model->draw(*ourShader);
-    });
 
-    // ourModel.draw(ourShader);
+    // ourModel->draw(*ourShader);
 
     //glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
     glBindVertexArray(0);
@@ -66,7 +66,7 @@ void Renderer::render()
 void Renderer::free()
 {
     delete ourShader;
-    ModelLoader::free();
+    // delete ourModel;
 }
 
 void initOurShader()
