@@ -6,11 +6,13 @@
 
 #include <GL/glew.h>
 #include <GL/gl.h>
+#include <vector>
 
 #include "Window.h"
 #include "Shader.h"
 #include "FileWatcher.h"
 #include "ModelLoader.h"
+#include "Geometry.h"
 
 glm::mat4 model = glm::mat4(1.0f);
 glm::mat4 view = glm::mat4(1.0f);
@@ -20,9 +22,11 @@ Shader *ourShader;
 bool reloadShader = false;
 
 unsigned int modelLoc, viewLoc, projectionLoc;
+std::vector<glm::vec3> cubePositions;
+Geometry cube(cubePositions);
 
 // predefines
-void initCubes();
+void initCubes(float halfExtent);
 void initOurShader();
 
 void Renderer::init()
@@ -40,10 +44,16 @@ void Renderer::init()
     FileWatcher::add(fragmentShader, []()
                      { reloadShader = true; });
 
-    initCubes();
+    initOurShader();
+
+    stbi_set_flip_vertically_on_load(true);
+
+    initCubes(0.5f);
 
     const char *modelPath = "../assets/models/backpack/backpack.obj";
     ModelLoader::addModel(modelPath);
+
+    glEnable(GL_DEPTH_TEST);
 }
 
 void Renderer::render()
@@ -53,12 +63,27 @@ void Renderer::render()
         ourShader->reload();
         initOurShader();
     }
+
+    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    ourShader->use();
+    //glBindVertexArray(VAO);
+
+    //glBindTexture(GL_TEXTURE_2D, textureId);
+    //glBindVertexArray(VAO);
+
+    auto pos = Window::getCamera()->getPosition();
+    auto viewMatrix = Window::getCamera()->getViewMatrix();
+    ourShader->setMat4("view", viewMatrix);
+
+    cube.draw(*ourShader);
+
     ModelLoader::renderAll([](Model *model) {
         model->draw(*ourShader);
     });
 
     // ourModel.draw(ourShader);
-
+    
     //glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
     glBindVertexArray(0);
 }
@@ -81,10 +106,24 @@ void initOurShader()
     glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(proj));
 }
 
-void initCubes()
+void initCubes(float halfExtent)
 {
+    vector<glm::vec3> cubePositions = {
+        glm::vec3(0.0f, 0.0f, 0.0f),
+        glm::vec3(2.0f, 5.0f, -15.0f),
+        glm::vec3(-1.5f, -2.2f, -2.5f),
+        glm::vec3(-3.8f, -2.0f, -12.3f),
+        glm::vec3(2.4f, -0.4f, -3.5f),
+        glm::vec3(-1.7f, 3.0f, -7.5f),
+        glm::vec3(1.3f, -2.0f, -2.5f),
+        glm::vec3(1.5f, 2.0f, -2.5f),
+        glm::vec3(1.5f, 0.2f, -1.5f),
+        glm::vec3(-1.3f, 1.0f, -1.5f)};
+
+        cube = Geometry(cubePositions);
+
     // create vertices?!?
-    float vertices[] = {
+    /*float vertices[] = {
         -0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
         0.5f, -0.5f, -0.5f, 1.0f, 0.0f,
         0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
@@ -127,18 +166,6 @@ void initCubes()
         -0.5f, 0.5f, 0.5f, 0.0f, 0.0f,
         -0.5f, 0.5f, -0.5f, 0.0f, 1.0f};
 
-    glm::vec3 cubePositions[] = {
-        glm::vec3(0.0f, 0.0f, 0.0f),
-        glm::vec3(2.0f, 5.0f, -15.0f),
-        glm::vec3(-1.5f, -2.2f, -2.5f),
-        glm::vec3(-3.8f, -2.0f, -12.3f),
-        glm::vec3(2.4f, -0.4f, -3.5f),
-        glm::vec3(-1.7f, 3.0f, -7.5f),
-        glm::vec3(1.3f, -2.0f, -2.5f),
-        glm::vec3(1.5f, 2.0f, -2.5f),
-        glm::vec3(1.5f, 0.2f, -1.5f),
-        glm::vec3(-1.3f, 1.0f, -1.5f)};
-
     unsigned int indices[] = {
         // note that we start from 0!
         0, 1, 3, // first triangle
@@ -173,7 +200,7 @@ void initCubes()
     viewLoc = glGetUniformLocation(ourShader->ID, "view");
     glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
     projectionLoc = glGetUniformLocation(ourShader->ID, "projection");
-    glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(proj));
+    glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(proj));*/
 
     // rendering commands here
     // glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
