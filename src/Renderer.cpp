@@ -13,7 +13,12 @@
 #include "FileWatcher.h"
 #include "ModelLoader.h"
 #include "Cube.h"
+#include "Water.h"
 
+// Water
+Water *water;
+
+// Rest:
 glm::mat4 model = glm::mat4(1.0f);
 glm::mat4 view = glm::mat4(1.0f);
 glm::mat4 proj = glm::mat4(1.0f);
@@ -57,46 +62,10 @@ struct Material{
     }
 };
 
-void initGBuffer()
-{
-    unsigned int gAlbedoSpec;
-
-    unsigned int gBuffer;
-    glGenFramebuffers(1, &gBuffer);
-    glBindFramebuffer(GL_FRAMEBUFFER, gBuffer);
-    unsigned int gPosition, gNormal, gColorSpec;
-
-    // - position color buffer
-    glGenTextures(1, &gPosition);
-    glBindTexture(GL_TEXTURE_2D, gPosition);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, Window::getWidth(), Window::getHeight(), 0, GL_RGBA, GL_FLOAT, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, gPosition, 0);
-
-    // - normal color buffer
-    glGenTextures(1, &gNormal);
-    glBindTexture(GL_TEXTURE_2D, gNormal);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, Window::getWidth(), Window::getHeight(), 0, GL_RGBA, GL_FLOAT, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, gNormal, 0);
-
-    // - color + specular color buffer
-    glGenTextures(1, &gAlbedoSpec);
-    glBindTexture(GL_TEXTURE_2D, gAlbedoSpec);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, Window::getWidth(), Window::getHeight(), 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, gAlbedoSpec, 0);
-
-    // - tell OpenGL which color attachments we'll use (of this framebuffer) for rendering
-    unsigned int attachments[3] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2};
-    glDrawBuffers(3, attachments);
-}
-
 void Renderer::init()
 {
+    water = new Water(512, 512);
+
     model = glm::rotate(model, glm::radians(0.0f), glm::vec3(1.0f, 0.0f, 0.0f));
     view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
     proj = glm::perspective(glm::radians(45.0f), (float)Window::getWidth() / (float)Window::getHeight(), 0.1f, 100.0f);
@@ -113,8 +82,8 @@ void Renderer::init()
                      { reloadShader = true; });
 
     //cubes.push_back(*new Cube("assets/container.jpg", glm::vec3(0.0f, 0.0f, 0.0f)));
-    cubes.push_back(*new Cube("assets/container.jpg", glm::vec3(2.0f, 5.0f, -15.0f)));
-    cubes.push_back(*new Cube("assets/container.jpg", glm::vec3(-1.5f, -2.2f, -2.5f)));   
+    // cubes.push_back(*new Cube("assets/container.jpg", glm::vec3(2.0f, 5.0f, -15.0f)));
+    // cubes.push_back(*new Cube("assets/container.jpg", glm::vec3(-1.5f, -2.2f, -2.5f)));   
 
     //stbi_set_flip_vertically_on_load(true);
 
@@ -141,41 +110,46 @@ void Renderer::init()
     glEnable(GL_DEPTH_TEST);
 }
 
+void Renderer::free()
+{
+    delete ourShader;
+    delete ourModel;
+    delete water;
+}
+
 void Renderer::render()
 {
     if (reloadShader)
     {
         ourShader->reload();
         initOurShader();
+        std::cout << "reload ourShader" << std::endl;
+        reloadShader=false;
     }
 
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    ourShader->use();
-    auto viewMatrix = Window::getCamera()->getViewMatrix();
-    ourShader->setMat4("view", viewMatrix);
-    glm::vec3 viewPos = Window::getCamera()->getPosition();
-    ourShader->setVec3("viewPos", viewPos);
+    // ourShader->use();
+    // auto viewMatrix = Window::getCamera()->getViewMatrix();
+    // ourShader->setMat4("view", viewMatrix);
+    // glm::vec3 viewPos = Window::getCamera()->getPosition();
+    // ourShader->setVec3("viewPos", viewPos);
 
-    for (unsigned int i = 0; i < cubes.size(); i++)
-    {
-        cubes[i].draw(*ourShader);
-    }
+    // for (unsigned int i = 0; i < cubes.size(); i++)
+    // {
+    //     cubes[i].draw(*ourShader);
+    // }
 
-    glm::mat4 mod = glm::mat4(1.0f);
-    ourShader->setMat4("model", glm::scale(mod,glm::vec3(.2,.2,.2)));
-    ourModel->draw(*ourShader);
-    for (auto cube : cubes)
-    {
-        cube.draw(*ourShader);
-    }
-}
+    // glm::mat4 mod = glm::mat4(1.0f);
+    // ourShader->setMat4("model", glm::scale(mod,glm::vec3(.2,.2,.2)));
+    // ourModel->draw(*ourShader);
+    // for (auto cube : cubes)
+    // {
+    //     cube.draw(*ourShader);
+    // }
 
-void Renderer::free()
-{
-    delete ourShader;
-    delete ourModel;
+    water->render();
 }
 
 void initOurShader()

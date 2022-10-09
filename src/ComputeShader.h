@@ -9,17 +9,17 @@
 #include <sstream>
 #include <glm/gtc/type_ptr.hpp>
 
-// Add Filewatcher and reload shader on change
-class Shader
+class ComputeShader
 {
 public:
     unsigned int ID;
 
     // constructor generates the shader on the fly
     // ------------------------------------------------------------------------
-    Shader(const char *vertexPath, const char *fragmentPath);
+    ComputeShader(const char *computePath);
 
     bool reload();
+
     // activate the shader
     // ------------------------------------------------------------------------
     void use();
@@ -39,8 +39,7 @@ public:
 
 private:
 
-    const char *vertexPath;
-    const char *fragmentPath;
+    const char *computePath;
     // utility function for checking shader compilation/linking errors.
     // ------------------------------------------------------------------------
     bool checkCompileErrors(unsigned int shader, std::string type);
