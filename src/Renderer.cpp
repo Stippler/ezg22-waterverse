@@ -101,8 +101,8 @@ void Renderer::init()
     view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
     proj = glm::perspective(glm::radians(45.0f), (float)Window::getWidth() / (float)Window::getHeight(), 0.1f, 100.0f);
 
-    const char *vertexShader = "../assets/shaders/vertex.vert";
-    const char *fragmentShader = "../assets/shaders/fragment.frag";
+    const char *vertexShader = "assets/shaders/vertex.vert";
+    const char *fragmentShader = "assets/shaders/fragment.frag";
     ourShader = new Shader(vertexShader, fragmentShader);
 
     initOurShader();
@@ -112,13 +112,17 @@ void Renderer::init()
     FileWatcher::add(fragmentShader, []()
                      { reloadShader = true; });
 
-    cubes.push_back(*new Cube("../assets/container.jpg", glm::vec3(0.0f, 0.0f, 0.0f)));
-    cubes.push_back(*new Cube("../assets/container.jpg", glm::vec3(2.0f, 5.0f, -15.0f)));
-    cubes.push_back(*new Cube("../assets/container.jpg", glm::vec3(-1.5f, -2.2f, -2.5f)));   
+    //cubes.push_back(*new Cube("assets/container.jpg", glm::vec3(0.0f, 0.0f, 0.0f)));
+    cubes.push_back(*new Cube("assets/container.jpg", glm::vec3(2.0f, 5.0f, -15.0f)));
+    cubes.push_back(*new Cube("assets/container.jpg", glm::vec3(-1.5f, -2.2f, -2.5f)));   
 
     //stbi_set_flip_vertically_on_load(true);
 
-    ourModel = new Model("../assets/models/beach_umbrella/12984_beach_umbrella_v1_L2.obj");
+    //ourModel = new Model("assets/models/beach_umbrella/12984_beach_umbrella_v1_L2.obj");
+    //stbi_set_flip_vertically_on_load(true);
+    //ourModel = new Model("assets/models/backpack/backpack.obj");
+    ourModel = new Model("assets/models/fish/fish.obj");
+    //ourModel = new Model("C:/Users/chris/Desktop/rock/Rock1/Rock1.obj");
 
     Light light(glm::vec3(1.2f, 1.0f, 2.0f), glm::vec3(0.2f, 0.2f, 0.2f), glm::vec3(0.5f, 0.5f, 0.5f), glm::vec3(1.0f, 1.0f, 1.0f));
     ourShader->setVec3("light.ambient", light.ambient);
