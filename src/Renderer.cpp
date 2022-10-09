@@ -26,20 +26,45 @@ unsigned int modelLoc, viewLoc, projectionLoc;
 // predefines
 void initOurShader();
 
-Model *ourModel;
+Model *shark;
+Model *fish;
+Model *ground;
+Model *pokeball;
 std::vector<Cube> cubes;
 
-struct Light{
-    glm::vec3 position;
+struct DirLight{
+    glm::vec3 direction;
     glm::vec3 ambient;
     glm::vec3 diffuse;
     glm::vec3 specular;
 
-    Light(glm::vec3 position, glm::vec3 ambient, glm::vec3 diffuse, glm::vec3 specular){
+    DirLight(glm::vec3 direction, glm::vec3 ambient, glm::vec3 diffuse, glm::vec3 specular){
+        this->direction = direction;
+        this->ambient = ambient;
+        this->diffuse = diffuse;
+        this->specular = specular;
+    }
+};
+
+struct PointLight {
+    glm::vec3 position;  
+  
+    glm::vec3 ambient;
+    glm::vec3 diffuse;
+    glm::vec3 specular;
+	
+    float constant;
+    float linear;
+    float quadratic;
+
+    PointLight(glm::vec3 position, glm::vec3 ambient, glm::vec3 diffuse, glm::vec3 specular, float constant, float linear, float quadratic){
         this->position = position;
         this->ambient = ambient;
         this->diffuse = diffuse;
         this->specular = specular;
+        this->constant = constant;
+        this->linear = linear;
+        this->quadratic = quadratic;
     }
 };
 
@@ -114,25 +139,37 @@ void Renderer::init()
 
     //cubes.push_back(*new Cube("assets/container.jpg", glm::vec3(0.0f, 0.0f, 0.0f)));
     cubes.push_back(*new Cube("assets/container.jpg", glm::vec3(2.0f, 5.0f, -15.0f)));
-    cubes.push_back(*new Cube("assets/container.jpg", glm::vec3(-1.5f, -2.2f, -2.5f)));   
+    cubes.push_back(*new Cube("assets/container.jpg", glm::vec3(-1.5f, -2.2f, -2.5f)));
 
     //stbi_set_flip_vertically_on_load(true);
 
     //ourModel = new Model("assets/models/beach_umbrella/12984_beach_umbrella_v1_L2.obj");
     //stbi_set_flip_vertically_on_load(true);
     //ourModel = new Model("assets/models/backpack/backpack.obj");
-    ourModel = new Model("assets/models/fish/fish.obj");
-    //ourModel = new Model("assets/models/rock/Rock1/Rock1.obj");
+    fish = new Model("assets/models/fish/fish.obj");
+    //rock = new Model("assets/models/rock/Rock1/Rock1.obj");
+    shark = new Model("assets/models/tigershark/untitled.obj");
+    ground = new Model("assets/models/floor/floor.obj");
+    //pokeball = new Model("C:/Users/chris/Downloads/pokeball/Pokeball.obj");
 
-    Light light(glm::vec3(1.2f, 1.0f, 2.0f), glm::vec3(0.2f, 0.2f, 0.2f), glm::vec3(0.5f, 0.5f, 0.5f), glm::vec3(1.0f, 1.0f, 1.0f));
+    DirLight light(glm::vec3(1.0f, -1.0f, 1.0f), glm::vec3(0.2f, 0.2f, 0.2f), glm::vec3(0.5f, 0.5f, 0.5f), glm::vec3(1.0f, 1.0f, 1.0f));
     ourShader->setVec3("light.ambient", light.ambient);
     ourShader->setVec3("light.diffuse", light.diffuse);
     ourShader->setVec3("light.specular", light.specular);
-    ourShader->setVec3("light.position", light.position);
+    ourShader->setVec3("light.direction", light.direction);
+
+    PointLight plight(glm::vec3(-0.5f, -2.2f, -2.5f), glm::vec3(0.2f, 0.2f, 0.2f), glm::vec3(0.5f, 0.5f, 0.5f), glm::vec3(1.0f, 1.0f, 1.0f), 1.0, 0.7, 1.8);
+    ourShader->setVec3("plight.ambient", plight.ambient);
+    ourShader->setVec3("plight.diffuse", plight.diffuse);
+    ourShader->setVec3("plight.specular", plight.specular);
+    ourShader->setVec3("plight.position", plight.position);
+    ourShader->setFloat("plight.constant", plight.constant);
+    ourShader->setFloat("plight.linear", plight.linear);
+    ourShader->setFloat("plight.quadratic", plight.quadratic);
     glm::vec3 viewPos = Window::getCamera()->getPosition();
     ourShader->setVec3("viewPos", viewPos);
 
-    Material coral(glm::vec3(1.0f, 0.5f, 0.31f), glm::vec3(1.0f, 0.5f, 0.31f), glm::vec3(0.5f, 0.5f, 0.5f), 32.0f);
+    Material coral(glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(0.5f, 0.5f, 0.5f), 32.0f);
     ourShader->setVec3("material.ambient", coral.ambient);
     ourShader->setVec3("material.diffuse", coral.diffuse);
     ourShader->setVec3("material.specular", coral.specular);
@@ -164,18 +201,27 @@ void Renderer::render()
     }
 
     glm::mat4 mod = glm::mat4(1.0f);
+    //ourShader->setMat4("model", glm::translate(glm::mat4(1.0f), glm::vec3(0.0, -10.0, 0.0))*glm::scale(mod,glm::vec3(1,1,1)));
     ourShader->setMat4("model", glm::scale(mod,glm::vec3(.2,.2,.2)));
-    ourModel->draw(*ourShader);
+    shark->draw(*ourShader);
+    ourShader->setMat4("model", glm::translate(glm::mat4(1.0f), glm::vec3(-0.5, -2.2, -2.5))*glm::scale(mod,glm::vec3(.2,.2,.2)));
+    fish->draw(*ourShader);
     for (auto cube : cubes)
     {
         cube.draw(*ourShader);
     }
+
+    ourShader->setMat4("model", glm::translate(glm::mat4(1.0f), glm::vec3(0.0, -10.0, 0.0))*glm::scale(mod,glm::vec3(1,1,1)));
+    ground->draw(*ourShader);
+    
 }
 
 void Renderer::free()
 {
     delete ourShader;
-    delete ourModel;
+    delete shark;
+    delete fish;
+    delete ground;
 }
 
 void initOurShader()
