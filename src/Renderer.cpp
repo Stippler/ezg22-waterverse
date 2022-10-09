@@ -122,7 +122,7 @@ void Renderer::init()
     //stbi_set_flip_vertically_on_load(true);
     //ourModel = new Model("assets/models/backpack/backpack.obj");
     ourModel = new Model("assets/models/fish/fish.obj");
-    //ourModel = new Model("C:/Users/chris/Desktop/rock/Rock1/Rock1.obj");
+    //ourModel = new Model("assets/models/rock/Rock1/Rock1.obj");
 
     Light light(glm::vec3(1.2f, 1.0f, 2.0f), glm::vec3(0.2f, 0.2f, 0.2f), glm::vec3(0.5f, 0.5f, 0.5f), glm::vec3(1.0f, 1.0f, 1.0f));
     ourShader->setVec3("light.ambient", light.ambient);
