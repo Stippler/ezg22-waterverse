@@ -101,9 +101,11 @@ void Renderer::init()
     view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
     proj = glm::perspective(glm::radians(45.0f), (float)Window::getWidth() / (float)Window::getHeight(), 0.1f, 100.0f);
 
-    const char *vertexShader = "../assets/shaders/vertex.vert";
-    const char *fragmentShader = "../assets/shaders/fragment.frag";
+    const char *vertexShader = "assets/shaders/vertex.vert";
+    const char *fragmentShader = "assets/shaders/fragment.frag";
+    std::cout << "after load shader" << std::endl;
     ourShader = new Shader(vertexShader, fragmentShader);
+    std::cout << "load shader" << std::endl;
 
     initOurShader();
 
@@ -112,13 +114,13 @@ void Renderer::init()
     FileWatcher::add(fragmentShader, []()
                      { reloadShader = true; });
 
-    cubes.push_back(*new Cube("../assets/container.jpg", glm::vec3(0.0f, 0.0f, 0.0f)));
-    cubes.push_back(*new Cube("../assets/container.jpg", glm::vec3(2.0f, 5.0f, -15.0f)));
-    cubes.push_back(*new Cube("../assets/container.jpg", glm::vec3(-1.5f, -2.2f, -2.5f)));   
+    // cubes.push_back(*new Cube("../assets/container.jpg", glm::vec3(0.0f, 0.0f, 0.0f)));
+    cubes.push_back(*new Cube("assets/container.jpg", glm::vec3(2.0f, 5.0f, -15.0f)));
+    cubes.push_back(*new Cube("assets/container.jpg", glm::vec3(-1.5f, -2.2f, -2.5f)));   
 
-    //stbi_set_flip_vertically_on_load(true);
+    stbi_set_flip_vertically_on_load(true);
 
-    ourModel = new Model("../assets/models/beach_umbrella/12984_beach_umbrella_v1_L2.obj");
+    ourModel = new Model("assets/models/backpack/backpack.obj");
 
     Light light(glm::vec3(1.2f, 1.0f, 2.0f), glm::vec3(0.2f, 0.2f, 0.2f), glm::vec3(0.5f, 0.5f, 0.5f), glm::vec3(1.0f, 1.0f, 1.0f));
     ourShader->setVec3("light.ambient", light.ambient);
@@ -154,14 +156,11 @@ void Renderer::render()
     glm::vec3 viewPos = Window::getCamera()->getPosition();
     ourShader->setVec3("viewPos", viewPos);
 
-    for (unsigned int i = 0; i < cubes.size(); i++)
-    {
-        cubes[i].draw(*ourShader);
-    }
 
     glm::mat4 mod = glm::mat4(1.0f);
     ourShader->setMat4("model", glm::scale(mod,glm::vec3(.2,.2,.2)));
     ourModel->draw(*ourShader);
+
     for (auto cube : cubes)
     {
         cube.draw(*ourShader);

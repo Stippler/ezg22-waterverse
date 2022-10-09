@@ -13,6 +13,8 @@
 #include <sstream>
 #include <unordered_map>
 
+#include <filesystem>
+
 #include "FileWatcher.h"
 #include "Model.h"
 
@@ -25,6 +27,8 @@ void loadShader();
 
 int main(const int argc, const char **argv)
 {
+    std::cout << "Current working directory: " << std::filesystem::current_path() << endl;
+
     Window::init();
 
     glewExperimental = true;
