@@ -31,10 +31,11 @@ unsigned int modelLoc, viewLoc, projectionLoc;
 // predefines
 void initOurShader();
 
-Model *shark;
-Model *fish;
-Model *ground;
-Model *pokeball;
+// Model *shark;
+// Model *fish;
+// Model *ground;
+// Model *pokeball;
+std::vector<Model*> models;
 std::vector<Cube> cubes;
 
 struct DirLight{
@@ -115,10 +116,13 @@ void Renderer::init()
     //ourModel = new Model("assets/models/beach_umbrella/12984_beach_umbrella_v1_L2.obj");
     //stbi_set_flip_vertically_on_load(true);
     //ourModel = new Model("assets/models/backpack/backpack.obj");
-    fish = new Model("assets/models/fish/fish.obj");
     //rock = new Model("assets/models/rock/Rock1/Rock1.obj");
-    shark = new Model("assets/models/tigershark/untitled.obj");
-    ground = new Model("assets/models/floor/floor.obj");
+    // Model *fish = new Model("assets/models/fish/fish.obj");
+    // Model *shark = new Model("assets/models/tigershark/untitled.obj");
+    // Model *ground = new Model("assets/models/floor/floor.obj");
+    // models.push_back(fish);
+    // models.push_back(shark);
+    // models.push_back(ground);
     //pokeball = new Model("C:/Users/chris/Downloads/pokeball/Pokeball.obj");
 
     DirLight light(glm::vec3(1.0f, -1.0f, 1.0f), glm::vec3(0.2f, 0.2f, 0.2f), glm::vec3(0.5f, 0.5f, 0.5f), glm::vec3(1.0f, 1.0f, 1.0f));
@@ -150,9 +154,10 @@ void Renderer::init()
 void Renderer::free()
 {
     delete ourShader;
-    delete shark;
-    delete fish;
-    delete ground;
+    // TODO: delete models
+    // delete shark;
+    // delete fish;
+    // delete ground;
 }
 
 void Renderer::render()
@@ -189,17 +194,20 @@ void Renderer::render()
 
     glm::mat4 mod = glm::mat4(1.0f);
     //ourShader->setMat4("model", glm::translate(glm::mat4(1.0f), glm::vec3(0.0, -10.0, 0.0))*glm::scale(mod,glm::vec3(1,1,1)));
-    ourShader->setMat4("model", glm::scale(mod, glm::vec3(.2,.2,.2)));
-    shark->draw(*ourShader);
-    ourShader->setMat4("model", glm::translate(glm::mat4(1.0f), glm::vec3(-0.5, -2.2, -2.5))*glm::scale(mod,glm::vec3(.2,.2,.2)));
-    fish->draw(*ourShader);
+
+    // TODO: draw
+    // ourShader->setMat4("model", glm::scale(mod, glm::vec3(.2,.2,.2)));
+    // shark->draw(*ourShader);
+    // ourShader->setMat4("model", glm::translate(glm::mat4(1.0f), glm::vec3(-0.5, -2.2, -2.5))*glm::scale(mod,glm::vec3(.2,.2,.2)));
+    // fish->draw(*ourShader);
+    // ourShader->setMat4("model", glm::translate(glm::mat4(1.0f), glm::vec3(0.0, -10.0, 0.0))*glm::scale(mod,glm::vec3(1,1,1)));
+    // ground->draw(*ourShader);
+
     for (auto cube : cubes)
     {
         cube.draw(*ourShader);
     }
 
-    ourShader->setMat4("model", glm::translate(glm::mat4(1.0f), glm::vec3(0.0, -10.0, 0.0))*glm::scale(mod,glm::vec3(1,1,1)));
-    ground->draw(*ourShader);
     
     water->render();
 }

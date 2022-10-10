@@ -7,11 +7,19 @@
 
 Water::Water(unsigned int width, unsigned int height) : width(width), height(height)
 {
-    createTexture(texture);
+    int work_grp_cnt[3];
+
+    glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 0, &work_grp_cnt[0]);
+    glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 1, &work_grp_cnt[1]);
+    glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 2, &work_grp_cnt[2]);
+
+    printf("max global (total) work group counts x:%i y:%i z:%i\n",
+            work_grp_cnt[0], work_grp_cnt[1], work_grp_cnt[2]);
 
     test = new ComputeShader("assets/shaders/water/test.comp");
     waterShader = new Shader("assets/shaders/water/water.vert",
                              "assets/shaders/water/water.frag");
+    texture = new WaterTexture(width, height);
 
     FileWatcher::add("assets/shaders/water/test.comp", [&]()
                      { reloadCompute = true; });
@@ -49,13 +57,15 @@ Water::Water(unsigned int width, unsigned int height) : width(width), height(hei
     // position attribute
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)0);
     glEnableVertexAttribArray(0);
-    //// color attribute
-    // glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
-    // glEnableVertexAttribArray(1);
 
     // texture coord attribute
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
+}
+
+Water::~Water()
+{
+    delete texture;
 }
 
 void Water::render()
@@ -68,8 +78,10 @@ void Water::render()
     }
 
     test->use();
+    texture->bindImage(0, GL_WRITE_ONLY);
     glDispatchCompute(width, height, 1);
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+    // glFinish();
 
     if (reloadShader)
     {
@@ -81,28 +93,10 @@ void Water::render()
     // bind textures
 
     waterShader->use();
-    waterShader->setInt("tex", 0);
     glBindVertexArray(VAO);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, texture);
+    waterShader->setInt("tex", 0);
+    texture->bind(0);
+    // texture->bindImage(0, GL_WRITE_ONLY);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-}
-
-void Water::createTexture(unsigned int &texture)
-{
-    glGenTextures(1, &texture);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, texture);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, width, height, 0, GL_RGBA,
-                 GL_FLOAT, NULL);
-
-    // glBindTexture(GL_TEXTURE_2D, 0)
-    glBindImageTexture(0, texture, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
 }

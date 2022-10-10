@@ -15,6 +15,12 @@
 
 #include <filesystem>
 
+#ifdef _WIN32
+#include <Windows.h>
+#else
+#include <unistd.h>
+#endif
+
 #include "FileWatcher.h"
 #include "Model.h"
 
@@ -55,6 +61,7 @@ int main(const int argc, const char **argv)
 
         // check and call events and swap the buffersprocessInput(window);
         Window::swapBuffers();
+        sleep(1/120.0);
     }
 
     Renderer::free();

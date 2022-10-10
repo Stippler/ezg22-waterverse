@@ -31,9 +31,9 @@ bool ComputeShader::reload()
     }
     const char *cShaderCode = computeCode.c_str();
 
-    unsigned int compute;
+    // unsigned int compute;
     // compute shader
-    compute = glCreateShader(GL_COMPUTE_SHADER);
+    GLuint compute = glCreateShader(GL_COMPUTE_SHADER);
     glShaderSource(compute, 1, &cShaderCode, NULL);
     glCompileShader(compute);
     if (!checkCompileErrors(compute, "COMPUTE"))
@@ -42,10 +42,10 @@ bool ComputeShader::reload()
     }
 
     // shader Program
-    unsigned int newId = glCreateProgram();
-    glAttachShader(ID, compute);
-    glLinkProgram(ID);
-    if (!checkCompileErrors(ID, "PROGRAM"))
+    GLuint newId = glCreateProgram();
+    glAttachShader(newId, compute);
+    glLinkProgram(newId);
+    if (!checkCompileErrors(newId, "PROGRAM"))
     {
         return false;
     }
