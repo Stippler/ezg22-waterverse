@@ -117,6 +117,63 @@ void Shader::setFloat(const GLchar *name, float value)
     glUniform1f(projectionLoc, value);
 }
 
+void Shader::setDirLight(const GLchar *name, DirLight *light){
+    std::string prefix = std::string(name);
+    std::string suffix = std::string(".ambient");
+    const char *n = (prefix + suffix).c_str();
+    this->setVec3(n, light->ambient);
+    suffix = std::string(".diffuse");
+    n = (prefix + suffix).c_str();
+    this->setVec3(n, light->diffuse);
+    suffix = std::string(".specular");
+    n = (prefix + suffix).c_str();
+    this->setVec3(n, light->specular);
+    suffix = std::string(".direction");
+    n = (prefix + suffix).c_str();
+    this->setVec3(n, light->direction);
+}
+
+void Shader::setPointLight(const GLchar *name, PointLight *plight){
+    std::string prefix = std::string(name);
+    std::string suffix = std::string(".ambient");
+    const char *n = (prefix + suffix).c_str();
+    this->setVec3(n, plight->ambient);
+    suffix = std::string(".diffuse");
+    n = (prefix + suffix).c_str();
+    this->setVec3(n, plight->diffuse);
+    suffix = std::string(".specular");
+    n = (prefix + suffix).c_str();
+    this->setVec3(n, plight->specular);
+    suffix = std::string(".position");
+    n = (prefix + suffix).c_str();
+    this->setVec3(n, plight->position);
+    suffix = std::string(".constant");
+    n = (prefix + suffix).c_str();
+    this->setFloat(n, plight->constant);
+    suffix = std::string(".linear");
+    n = (prefix + suffix).c_str();
+    this->setFloat(n, plight->linear);
+    suffix = std::string(".quadratic");
+    n = (prefix + suffix).c_str();
+    this->setFloat(n, plight->quadratic);
+}
+
+void Shader::setMaterial(const GLchar *name, Material *material){
+    std::string prefix = std::string(name);
+    std::string suffix = std::string(".ambient");
+    const char *n = (prefix + suffix).c_str();
+    this->setVec3(n, material->ambient);
+    suffix = std::string(".diffuse");
+    n = (prefix + suffix).c_str();
+    this->setVec3(n, material->diffuse);
+    suffix = std::string(".specular");
+    n = (prefix + suffix).c_str();
+    this->setVec3(n, material->specular);
+    suffix = std::string(".shininess");
+    n = (prefix + suffix).c_str();
+    this->setFloat(n, material->shininess);
+}
+
 // utility function for checking shader compilation/linking errors.
 // ------------------------------------------------------------------------
 bool Shader::checkCompileErrors(unsigned int shader, std::string type)

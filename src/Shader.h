@@ -9,6 +9,9 @@
 #include <sstream>
 #include <glm/gtc/type_ptr.hpp>
 #include "Watchable.h"
+#include "DirLight.h"
+#include "PointLight.h"
+#include "Material.h"
 
 // Add Filewatcher and reload shader on change
 class Shader
@@ -37,6 +40,12 @@ public:
     void setVec3(const GLchar* name, glm::vec3 &vector);
 
     void setFloat(const GLchar *name, float value);
+
+    void setDirLight(const GLchar *name, DirLight *light);
+
+    void setPointLight(const GLchar *name, PointLight *plight);
+
+    void setMaterial(const GLchar *name, Material *material);
 
 private:
 
