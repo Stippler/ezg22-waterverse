@@ -26,12 +26,28 @@ unsigned int modelLoc, viewLoc, projectionLoc;
 // predefines
 void initOurShader();
 
+// init depth shader
+Shader *depthShader;
+Shader *shadowShader;
+Shader *debugShadow;
+
 Model *shark;
 Model *fish;
 Model *ground;
 Model *pokeball;
+Model *crate;
 std::vector<Cube> cubes;
 
+// Shadow predefines
+unsigned int depthMapFBO;
+const unsigned int SHADOW_WIDTH = 1024, SHADOW_HEIGHT = 1024;
+unsigned int depthMap;
+
+// Window predefines
+//int width = 800;
+//int height = 600;
+
+// Structs for lights
 struct DirLight{
     glm::vec3 direction;
     glm::vec3 ambient;
@@ -82,6 +98,9 @@ struct Material{
     }
 };
 
+//lights predefines
+DirLight *light;
+
 void initGBuffer()
 {
     unsigned int gAlbedoSpec;
@@ -130,12 +149,24 @@ void Renderer::init()
     const char *fragmentShader = "assets/shaders/fragment.frag";
     ourShader = new Shader(vertexShader, fragmentShader);
 
-    initOurShader();
-
     FileWatcher::add(vertexShader, []()
                      { reloadShader = true; });
     FileWatcher::add(fragmentShader, []()
                      { reloadShader = true; });
+
+    vertexShader = "assets/shaders/depth.vert";
+    fragmentShader = "assets/shaders/depth.frag";
+    depthShader = new Shader(vertexShader, fragmentShader);
+
+    vertexShader = "assets/shaders/shadow.vert";
+    fragmentShader = "assets/shaders/shadow.frag";
+    shadowShader = new Shader(vertexShader, fragmentShader);
+
+    vertexShader = "assets/shaders/debugShadow.vert";
+    fragmentShader = "assets/shaders/debugShadow.frag";
+    debugShadow = new Shader(vertexShader, fragmentShader);
+
+    initOurShader();
 
     //cubes.push_back(*new Cube("assets/container.jpg", glm::vec3(0.0f, 0.0f, 0.0f)));
     cubes.push_back(*new Cube("assets/container.jpg", glm::vec3(2.0f, 5.0f, -15.0f)));
@@ -150,13 +181,20 @@ void Renderer::init()
     //rock = new Model("assets/models/rock/Rock1/Rock1.obj");
     shark = new Model("assets/models/tigershark/untitled.obj");
     ground = new Model("assets/models/floor/floor.obj");
+    crate = new Model("assets/models/Crate/Crate1.obj");
     //pokeball = new Model("C:/Users/chris/Downloads/pokeball/Pokeball.obj");
 
-    DirLight light(glm::vec3(1.0f, -1.0f, 1.0f), glm::vec3(0.2f, 0.2f, 0.2f), glm::vec3(0.5f, 0.5f, 0.5f), glm::vec3(1.0f, 1.0f, 1.0f));
-    ourShader->setVec3("light.ambient", light.ambient);
-    ourShader->setVec3("light.diffuse", light.diffuse);
-    ourShader->setVec3("light.specular", light.specular);
-    ourShader->setVec3("light.direction", light.direction);
+
+    // Initialise lights
+    light = new DirLight(glm::vec3(1.0f, -1.0f, 0.0f), glm::vec3(0.2f, 0.2f, 0.2f), glm::vec3(0.5f, 0.5f, 0.5f), glm::vec3(1.0f, 1.0f, 1.0f));
+    ourShader->setVec3("light.ambient", light->ambient);
+    ourShader->setVec3("light.diffuse", light->diffuse);
+    ourShader->setVec3("light.specular", light->specular);
+    ourShader->setVec3("light.direction", light->direction);
+    shadowShader->setVec3("light.ambient", light->ambient);
+    shadowShader->setVec3("light.diffuse", light->diffuse);
+    shadowShader->setVec3("light.specular", light->specular);
+    shadowShader->setVec3("light.direction", light->direction);
 
     PointLight plight(glm::vec3(-0.5f, -2.2f, -2.5f), glm::vec3(0.2f, 0.2f, 0.2f), glm::vec3(0.5f, 0.5f, 0.5f), glm::vec3(1.0f, 1.0f, 1.0f), 1.0, 0.7, 1.8);
     ourShader->setVec3("plight.ambient", plight.ambient);
@@ -167,13 +205,46 @@ void Renderer::init()
     ourShader->setFloat("plight.linear", plight.linear);
     ourShader->setFloat("plight.quadratic", plight.quadratic);
     glm::vec3 viewPos = Window::getCamera()->getPosition();
-    ourShader->setVec3("viewPos", viewPos);
+    shadowShader->setVec3("viewPos", viewPos);
+    shadowShader->setVec3("plight.ambient", plight.ambient);
+    shadowShader->setVec3("plight.diffuse", plight.diffuse);
+    shadowShader->setVec3("plight.specular", plight.specular);
+    shadowShader->setVec3("plight.position", plight.position);
+    shadowShader->setFloat("plight.constant", plight.constant);
+    shadowShader->setFloat("plight.linear", plight.linear);
+    shadowShader->setFloat("plight.quadratic", plight.quadratic);
+    shadowShader->setVec3("viewPos", viewPos);
 
     Material coral(glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(0.5f, 0.5f, 0.5f), 32.0f);
     ourShader->setVec3("material.ambient", coral.ambient);
     ourShader->setVec3("material.diffuse", coral.diffuse);
     ourShader->setVec3("material.specular", coral.specular);
     ourShader->setFloat("material.shininess", coral.shininess);
+    shadowShader->setVec3("material.ambient", coral.ambient);
+    shadowShader->setVec3("material.diffuse", coral.diffuse);
+    shadowShader->setVec3("material.specular", coral.specular);
+    shadowShader->setFloat("material.shininess", coral.shininess);
+
+    // Shadow mapping
+    // create a frame buffer object for rendering the depth map
+    glEnable(GL_DEPTH_TEST);
+    glGenFramebuffers(1, &depthMapFBO);
+
+    glGenTextures(1, &depthMap);
+    glBindTexture(GL_TEXTURE_2D, depthMap);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER); 
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+    float borderColor[] = { 1.0, 1.0, 1.0, 1.0 };
+	glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);  
+
+    glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthMap, 0);
+    glDrawBuffer(GL_NONE);
+    glReadBuffer(GL_NONE);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     glEnable(GL_DEPTH_TEST);
 }
@@ -189,30 +260,121 @@ void Renderer::render()
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    ourShader->use();
+    // Render depth of scene to texture (from light's perspective)
+    glm::mat4 lightProjection, lightView;
+    glm::mat4 lightSpaceMatrix;
+    float near_plane = 1.0f, far_plane = 35.0f;
+    lightProjection = glm::ortho(-25.0f, 25.0f, -25.0f, 25.0f, near_plane, far_plane);
+    //lightView = myLookAt(light->direction, glm::vec3(0.f), glm::vec3(0.f, 1.f, 0.f));
+    //lightView = myLookAt(glm::vec3(-2.0f, 4.0f, -1.0f), glm::vec3(0.f), glm::vec3(0.f, 1.f, 0.f));
+    lightView = glm::lookAt(-10.0f*light->direction, glm::vec3(0.0f, -10.0f, 0.0f), glm::vec3(0.0, 1.0, 0.0));
+    
+	lightSpaceMatrix = lightProjection * lightView;
+
+    depthShader->use();
+    depthShader->setMat4("lightSpaceMatrix", lightSpaceMatrix);
+
+    glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
+    glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+    glClear(GL_DEPTH_BUFFER_BIT);
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_FRONT);
+    glDisable(GL_CULL_FACE);
+    glm::mat4 mod = glm::mat4(1.0f);
+    depthShader->setMat4("model", glm::translate(glm::mat4(1.0f), glm::vec3(0.0, -8.0, -0.0))*glm::scale(mod,glm::vec3(1,1,1)));
+    shark->draw(*depthShader);
+    depthShader->setMat4("model", glm::translate(glm::mat4(1.0f), glm::vec3(-3.5, -5.2, -2.5))*glm::scale(mod,glm::vec3(.2,.2,.2)));
+    fish->draw(*depthShader);
+    depthShader->setMat4("model", glm::translate(glm::mat4(1.0f), glm::vec3(2.0f, -5.0f, 7.0f))*glm::scale(mod,glm::vec3(.5,.5,.5)));
+    crate->draw(*depthShader);
+    depthShader->setMat4("model", glm::translate(glm::mat4(1.0f), glm::vec3(-1.5f, -2.2f, -2.5f))*glm::scale(mod,glm::vec3(.5,.5,.5)));
+    crate->draw(*depthShader);
+    depthShader->setMat4("model", glm::translate(glm::mat4(1.0f), glm::vec3(0.0, -10.0, 0.0))*glm::scale(mod,glm::vec3(1,1,1)));
+    ground->draw(*depthShader);
+    glCullFace(GL_BACK);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    
+
+    
+
+    glViewport(0, 0, Window::getWidth(), Window::getHeight());
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+
+    /*ourShader->use();
     auto viewMatrix = Window::getCamera()->getViewMatrix();
     ourShader->setMat4("view", viewMatrix);
     glm::vec3 viewPos = Window::getCamera()->getPosition();
     ourShader->setVec3("viewPos", viewPos);
 
-    for (unsigned int i = 0; i < cubes.size(); i++)
-    {
-        cubes[i].draw(*ourShader);
-    }
-
-    glm::mat4 mod = glm::mat4(1.0f);
-    //ourShader->setMat4("model", glm::translate(glm::mat4(1.0f), glm::vec3(0.0, -10.0, 0.0))*glm::scale(mod,glm::vec3(1,1,1)));
-    ourShader->setMat4("model", glm::scale(mod,glm::vec3(.2,.2,.2)));
+    mod = glm::mat4(1.0f);
+    ourShader->setMat4("model", glm::translate(glm::mat4(1.0f), glm::vec3(0.0, -8.0, -0.0))*glm::scale(mod,glm::vec3(1,1,1)));
     shark->draw(*ourShader);
-    ourShader->setMat4("model", glm::translate(glm::mat4(1.0f), glm::vec3(-0.5, -2.2, -2.5))*glm::scale(mod,glm::vec3(.2,.2,.2)));
+    ourShader->setMat4("model", glm::translate(glm::mat4(1.0f), glm::vec3(-3.5, -5.2, -2.5))*glm::scale(mod,glm::vec3(.2,.2,.2)));
     fish->draw(*ourShader);
-    for (auto cube : cubes)
-    {
-        cube.draw(*ourShader);
-    }
-
+    ourShader->setMat4("model", glm::translate(glm::mat4(1.0f), glm::vec3(2.0f, -5.0f, 7.0f))*glm::scale(mod,glm::vec3(.5,.5,.5)));
+    crate->draw(*ourShader);
+    ourShader->setMat4("model", glm::translate(glm::mat4(1.0f), glm::vec3(-1.5f, -2.2f, -2.5f))*glm::scale(mod,glm::vec3(.5,.5,.5)));
+    crate->draw(*ourShader);
     ourShader->setMat4("model", glm::translate(glm::mat4(1.0f), glm::vec3(0.0, -10.0, 0.0))*glm::scale(mod,glm::vec3(1,1,1)));
-    ground->draw(*ourShader);
+    ground->draw(*ourShader);*/
+
+
+    shadowShader->use();
+    auto viewMatrix = Window::getCamera()->getViewMatrix();
+    shadowShader->setMat4("view", viewMatrix);
+    glm::vec3 viewPos = Window::getCamera()->getPosition();
+    shadowShader->setVec3("viewPos", viewPos);
+    shadowShader->setMat4("lightSpaceMatrix", lightSpaceMatrix);
+    glUniform1i(glGetUniformLocation(shadowShader->ID, "shadowMap"), 2);
+	glActiveTexture(GL_TEXTURE2);
+	glBindTexture(GL_TEXTURE_2D, depthMap);
+
+    mod = glm::mat4(1.0f);
+    shadowShader->setMat4("model", glm::translate(glm::mat4(1.0f), glm::vec3(0.0, -8.0, -0.0))*glm::scale(mod,glm::vec3(1,1,1)));
+    shark->draw(*shadowShader);
+    shadowShader->setMat4("model", glm::translate(glm::mat4(1.0f), glm::vec3(-3.5, -5.2, -2.5))*glm::scale(mod,glm::vec3(.2,.2,.2)));
+    fish->draw(*shadowShader);
+    shadowShader->setMat4("model", glm::translate(glm::mat4(1.0f), glm::vec3(2.0f, -5.0f, 7.0f))*glm::scale(mod,glm::vec3(.5,.5,.5)));
+    crate->draw(*shadowShader);
+    shadowShader->setMat4("model", glm::translate(glm::mat4(1.0f), glm::vec3(-1.5f, -2.2f, -2.5f))*glm::scale(mod,glm::vec3(.5,.5,.5)));
+    crate->draw(*shadowShader);
+    shadowShader->setMat4("model", glm::translate(glm::mat4(1.0f), glm::vec3(0.0, -10.0, 0.0))*glm::scale(mod,glm::vec3(1,1,1)));
+    ground->draw(*shadowShader);
+
+
+    /*debugShadow->use();
+    debugShadow->setInt("depthMap", 0);
+    debugShadow->setFloat("near_plane", near_plane);
+    debugShadow->setFloat("far_plane", far_plane);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, depthMap);
+    unsigned int quadVAO = 0;
+    unsigned int quadVBO;
+    if (quadVAO == 0)
+    {
+        float quadVertices[] = {
+            // positions        // texture Coords
+            -1.0f,  1.0f, 0.0f, 0.0f, 1.0f,
+            -1.0f, -1.0f, 0.0f, 0.0f, 0.0f,
+             1.0f,  1.0f, 0.0f, 1.0f, 1.0f,
+             1.0f, -1.0f, 0.0f, 1.0f, 0.0f,
+        };
+        // setup plane VAO
+        glGenVertexArrays(1, &quadVAO);
+        glGenBuffers(1, &quadVBO);
+        glBindVertexArray(quadVAO);
+        glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), &quadVertices, GL_STATIC_DRAW);
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+        glEnableVertexAttribArray(2);
+        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+    }
+    glBindVertexArray(quadVAO);
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+    glBindVertexArray(0);*/
     
 }
 
@@ -233,5 +395,13 @@ void initOurShader()
     viewLoc = glGetUniformLocation(ourShader->ID, "view");
     glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
     projectionLoc = glGetUniformLocation(ourShader->ID, "projection");
+    glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(proj));
+
+    shadowShader->use();
+    modelLoc = glGetUniformLocation(shadowShader->ID, "model");
+    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+    viewLoc = glGetUniformLocation(shadowShader->ID, "view");
+    glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
+    projectionLoc = glGetUniformLocation(shadowShader->ID, "projection");
     glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(proj));
 }
