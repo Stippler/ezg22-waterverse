@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "FileWatcher.h"
+#include "Window.h"
 
 Water::Water(unsigned int width, unsigned int height) : width(width), height(height)
 {
@@ -37,7 +38,7 @@ Water::Water(unsigned int width, unsigned int height) : width(width), height(hei
     FileWatcher::add("assets/shaders/water/water.frag", [&]()
                      { reloadShader = true; });
 
-    std::vector<GridVertex> vertices(height * width);
+    std::vector<float> vertices(height * width * 5);
     std::vector<unsigned int> indices(height * width * 2 * 3);
 
     unsigned int idx = 0;
@@ -45,11 +46,14 @@ Water::Water(unsigned int width, unsigned int height) : width(width), height(hei
     {
         for (int x = 0; x < width; x++)
         {
-            vertices[idx].pos = glm::vec3(float(x), 0.f, float(z));
             float u = ((float)x / width);
             float v = ((float)z / height);
-            vertices[idx].texCoords = glm::vec2(u, v);
-            idx++;
+
+            vertices[idx++] = (float)x/width;
+            vertices[idx++] = 0.0f;
+            vertices[idx++] = (float)z/height;
+            vertices[idx++] = u;
+            vertices[idx++] = v;
         }
     }
 
@@ -58,12 +62,13 @@ Water::Water(unsigned int width, unsigned int height) : width(width), height(hei
     {
         for (unsigned int x = 0; x < width; x++)
         {
-            indices[idx++] = (width * z) + x;
-            indices[idx++] = (width * (z + 1)) + x;
-            indices[idx++] = (width * z) + x + 1;
-            indices[idx++] = (width * z) + x + 1;
-            indices[idx++] = (width * (z + 1)) + x;
-            indices[idx++] = (width * (z + 1)) + x + 1;
+            indices[idx++] = (width * z) + x; // 0
+            indices[idx++] = (width * (z + 1)) + x; // 2
+            indices[idx++] = (width * z) + x + 1; // 1
+
+            indices[idx++] = (width * z) + x + 1; // 1
+            indices[idx++] = (width * (z + 1)) + x; // 2
+            indices[idx++] = (width * (z + 1)) + x + 1; // 3
         }
     }
 
@@ -86,17 +91,17 @@ Water::Water(unsigned int width, unsigned int height) : width(width), height(hei
     glBindVertexArray(VAO);
 
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(GridVertex), vertices.data(), GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), GL_STATIC_DRAW);
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices.data(), GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size()*sizeof(unsigned int), indices.data(), GL_STATIC_DRAW);
 
     // vertex positions
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(GridVertex), (void *)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5*sizeof(float), (void *)0);
     glEnableVertexAttribArray(0);
 
     // vertex textureCoordinates
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(GridVertex), (void *)offsetof(GridVertex, texCoords));
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5*sizeof(float), (void *)(3*sizeof(float)));
     glEnableVertexAttribArray(1);
 
     // position attribute
@@ -126,7 +131,6 @@ void Water::render()
     texture->bindImage(0, GL_WRITE_ONLY);
     glDispatchCompute(width, height, 1);
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
-    // glFinish();
 
     if (reloadShader)
     {
@@ -136,12 +140,21 @@ void Water::render()
     }
 
     // bind textures
-
     waterShader->use();
-    glBindVertexArray(VAO);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    Window::setMatrices(waterShader);
+    waterShader->setMat4("model", model);
+
     waterShader->setInt("tex", 0);
     texture->bind(0);
-    // texture->bindImage(0, GL_WRITE_ONLY);
-    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+	glDisable(GL_CULL_FACE);
+    glEnable(GL_BLEND);
+    glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+    glBindVertexArray(VAO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glDrawElements(GL_TRIANGLES, width*height*2*3, GL_UNSIGNED_INT, 0);
+    glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+    glDisable(GL_BLEND);
+    glEnable(GL_CULL_FACE);
+    glBindVertexArray(0);
 }

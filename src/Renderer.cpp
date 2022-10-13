@@ -88,7 +88,7 @@ struct Material
 
 void Renderer::init()
 {
-    water = new Water(512, 512);
+    water = new Water();
 
     // Rest:
 
@@ -106,7 +106,7 @@ void Renderer::init()
 
     models.push_back(new Model("assets/models/fish/fish.obj"));
     models.push_back(new Model("assets/models/tigershark/untitled.obj", glm::vec3(5.0f, 5.0f, -15.0f)));
-    models.push_back(new Model("assets/models/floor/floor.obj", glm::vec3(.0f, -5.0f, 0.f)));
+    // models.push_back(new Model("assets/models/floor/floor.obj", glm::vec3(.0f, -5.0f, 0.f)));
 
     ourShader = new Shader(vertexShader, fragmentShader);
     ourShader->use();
@@ -164,12 +164,8 @@ void Renderer::render()
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     ourShader->use();
-    glm::mat4 proj = glm::perspective(glm::radians(45.0f), (float)Window::getWidth() / (float)Window::getHeight(), 0.1f, 100.0f);
-    ourShader->setMat4("projection", proj);
-    auto viewMatrix = Window::getCamera()->getViewMatrix();
-    ourShader->setMat4("view", viewMatrix);
-    glm::vec3 viewPos = Window::getCamera()->getPosition();
-    ourShader->setVec3("viewPos", viewPos);
+
+    Window::setMatrices(ourShader);
 
     for (auto model : models)
     {

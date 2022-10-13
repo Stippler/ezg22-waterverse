@@ -14,15 +14,16 @@ struct GridVertex{
 class Water
 {
 public:
-    Water(unsigned int width = 512, unsigned int height = 512);
+    Water(unsigned int width = 16, unsigned int height = 16);
     ~Water();
 
     void render();
 private:
 
     unsigned int width, height;
-
     unsigned int VBO, VAO, EBO;
+
+    glm::mat4 model;
 
     ComputeShader *test;
     Shader *waterShader;
