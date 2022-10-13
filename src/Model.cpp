@@ -1,8 +1,9 @@
 #include "Model.h"
 
-Model::Model(std::string const &path, bool gamma) : path(path), gammaCorrection(gamma)
+Model::Model(std::string const &path, glm::vec3 position, bool gamma) : path(path), gammaCorrection(gamma)
 {
     loadModel(path);
+    model = glm::translate(model, position);
 }
 
 void Model::reload()
@@ -12,8 +13,14 @@ void Model::reload()
 
 void Model::draw(Shader &shader)
 {
+    shader.use();
+	int modelLoc = glGetUniformLocation(shader.ID, "model");
+    shader.setMat4("model", model);
+
     for (unsigned int i = 0; i < meshes.size(); i++)
+    {
         meshes[i].draw(shader);
+    }
 }
 
 void Model::loadModel(std::string const &path)

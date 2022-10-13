@@ -29,7 +29,7 @@ public:
     bool gammaCorrection;
 
     // constructor, expects a filepath to a 3D model.
-    Model(std::string const &path, bool gamma = false);
+    Model(std::string const &path, glm::vec3 position=glm::vec3(0.f, 0.f, 0.f), bool gamma = false);
 
     void reload();
 
@@ -38,6 +38,7 @@ public:
 
 private:
     std::string const &path;
+    glm::mat4 model = glm::mat4(1.0f);
 
     // loads a model with supported ASSIMP extensions from file and stores the resulting meshes in the meshes vector.
     void loadModel(std::string const &path);

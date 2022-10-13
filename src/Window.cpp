@@ -50,8 +50,10 @@ void mouseButtonCallback(GLFWwindow *window, int button, int action, int mods)
     }
 }
 
-void framebufferSizeCallback(GLFWwindow *window, int width, int height)
+void framebufferSizeCallback(GLFWwindow *window, int newWidth, int newHeight)
 {
+    width=newWidth;
+    height=newHeight;
     glViewport(0, 0, width, height);
 }
 

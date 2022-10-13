@@ -1,8 +1,15 @@
 #pragma once
 
+#include <glm/glm.hpp>
+
 #include "ComputeShader.h"
 #include "Shader.h"
 #include "WaterTexture.h"
+
+struct GridVertex{
+    glm::vec3 pos;
+    glm::vec2 texCoords;
+};
 
 class Water
 {
@@ -12,6 +19,7 @@ public:
 
     void render();
 private:
+
     unsigned int width, height;
 
     unsigned int VBO, VAO, EBO;
