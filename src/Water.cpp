@@ -41,7 +41,7 @@ Water::Water(unsigned int width, unsigned int height) : width(width), height(hei
     std::vector<float> vertices(height * width * 5);
     std::vector<unsigned int> indices(height * width * 2 * 3);
 
-    unsigned int idx = 0;
+    idx = 0;
     for (int z = 0; z < height; z++)
     {
         for (int x = 0; x < width; x++)
@@ -58,9 +58,9 @@ Water::Water(unsigned int width, unsigned int height) : width(width), height(hei
     }
 
     idx = 0;
-    for (unsigned int z = 0; z < height; z++)
+    for (unsigned int z = 0; z < height-1; z++)
     {
-        for (unsigned int x = 0; x < width; x++)
+        for (unsigned int x = 0; x < width-1; x++)
         {
             indices[idx++] = (width * z) + x; // 0
             indices[idx++] = (width * (z + 1)) + x; // 2
@@ -152,7 +152,7 @@ void Water::render()
     glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
     glBindVertexArray(VAO);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glDrawElements(GL_TRIANGLES, width*height*2*3, GL_UNSIGNED_INT, 0);
+    glDrawElements(GL_TRIANGLES, idx, GL_UNSIGNED_INT, 0);
     glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
     glDisable(GL_BLEND);
     glEnable(GL_CULL_FACE);

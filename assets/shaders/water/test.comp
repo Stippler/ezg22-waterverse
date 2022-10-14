@@ -13,5 +13,6 @@ void main() {
 	
     // imageStore(imgOutput, texelCoord, value);
     value = vec4(0, 0.5, 0, 1);
+
     imageStore(imgOutput, texelCoord, value);
 }

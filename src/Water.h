@@ -14,7 +14,7 @@ struct GridVertex{
 class Water
 {
 public:
-    Water(unsigned int width = 16, unsigned int height = 16);
+    Water(unsigned int width = 512, unsigned int height = 512);
     ~Water();
 
     void render();
@@ -22,6 +22,8 @@ private:
 
     unsigned int width, height;
     unsigned int VBO, VAO, EBO;
+
+    unsigned int idx=0;
 
     glm::mat4 model;
 

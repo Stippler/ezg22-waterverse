@@ -24,9 +24,6 @@ bool reloadShader = false;
 
 unsigned int modelLoc, viewLoc, projectionLoc;
 
-// predefines
-void initOurShader();
-
 std::vector<Model *> models;
 std::vector<Cube *> cubes;
 
@@ -180,6 +177,3 @@ void Renderer::render()
     water->render();
 }
 
-void initOurShader()
-{
-}
