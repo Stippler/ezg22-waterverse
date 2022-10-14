@@ -25,16 +25,25 @@ Water::Water(unsigned int width, unsigned int height) : width(width), height(hei
            work_grp_cnt[0], work_grp_cnt[1], work_grp_cnt[2]);
 
     test = new ComputeShader("assets/shaders/water/test.comp");
+    normal = new ComputeShader("assets/shaders/water/normal.comp");
+    update = new ComputeShader("assets/shaders/water/update.comp");
+    drop = new ComputeShader("assets/shaders/water/drop.comp");
+
     waterShader = new Shader("assets/shaders/water/water.vert",
                              "assets/shaders/water/water.frag");
     texture = new WaterTexture(width, height);
 
     FileWatcher::add("assets/shaders/water/test.comp", [&]()
                      { reloadCompute = true; });
+    FileWatcher::add("assets/shaders/water/normal.comp", [&]()
+                     { reloadCompute = true; });
+    FileWatcher::add("assets/shaders/water/update.comp", [&]()
+                     { reloadCompute = true; });
+    FileWatcher::add("assets/shaders/water/drop.comp", [&]()
+                     { reloadCompute = true; });
 
     FileWatcher::add("assets/shaders/water/water.vert", [&]()
                      { reloadShader = true; });
-
     FileWatcher::add("assets/shaders/water/water.frag", [&]()
                      { reloadShader = true; });
 
@@ -49,37 +58,37 @@ Water::Water(unsigned int width, unsigned int height) : width(width), height(hei
             float u = ((float)x / width);
             float v = ((float)z / height);
 
-            vertices[idx++] = (float)x/width;
+            vertices[idx++] = (float)x / width;
             vertices[idx++] = 0.0f;
-            vertices[idx++] = (float)z/height;
+            vertices[idx++] = (float)z / height;
             vertices[idx++] = u;
             vertices[idx++] = v;
         }
     }
 
     idx = 0;
-    for (unsigned int z = 0; z < height-1; z++)
+    for (unsigned int z = 0; z < height - 1; z++)
     {
-        for (unsigned int x = 0; x < width-1; x++)
+        for (unsigned int x = 0; x < width - 1; x++)
         {
-            indices[idx++] = (width * z) + x; // 0
+            indices[idx++] = (width * z) + x;       // 0
             indices[idx++] = (width * (z + 1)) + x; // 2
-            indices[idx++] = (width * z) + x + 1; // 1
+            indices[idx++] = (width * z) + x + 1;   // 1
 
-            indices[idx++] = (width * z) + x + 1; // 1
-            indices[idx++] = (width * (z + 1)) + x; // 2
+            indices[idx++] = (width * z) + x + 1;       // 1
+            indices[idx++] = (width * (z + 1)) + x;     // 2
             indices[idx++] = (width * (z + 1)) + x + 1; // 3
         }
     }
 
-    // float vertices[] = {
+    // float vertices2[] = {
     //     // positions        // texture coords
     //     0.5f, 0.5f, 0.0f, 1.0f, 1.0f,   // top right
     //     0.5f, -0.5f, 0.0f, 1.0f, 0.0f,  // bottom right
     //     -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, // bottom left
     //     -0.5f, 0.5f, 0.0f, 0.0f, 1.0f   // top left
     // };
-    // unsigned int indices[] = {
+    // unsigned int indices2[] = {
     //     0, 1, 3, // first triangle
     //     1, 2, 3  // second triangle
     // };
@@ -94,21 +103,27 @@ Water::Water(unsigned int width, unsigned int height) : width(width), height(hei
     glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), GL_STATIC_DRAW);
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size()*sizeof(unsigned int), indices.data(), GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), indices.data(), GL_STATIC_DRAW);
 
     // vertex positions
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5*sizeof(float), (void *)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)0);
     glEnableVertexAttribArray(0);
 
     // vertex textureCoordinates
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5*sizeof(float), (void *)(3*sizeof(float)));
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
 
-    // position attribute
+    // glGenVertexArrays(1, &VAO2);
+    // glGenBuffers(1, &VBO2);
+    // glGenBuffers(1, &EBO2);
+
+    // glBindVertexArray(VAO2);
+
+    // // position attribute
     // glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)0);
     // glEnableVertexAttribArray(0);
 
-    // texture coord attribute
+    // // texture coord attribute
     // glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)(3 * sizeof(float)));
     // glEnableVertexAttribArray(1);
 }
@@ -123,6 +138,9 @@ void Water::render()
     if (reloadCompute)
     {
         test->reload();
+        normal->reload();
+        drop->reload();
+        update->reload();
         std::cout << "reload test computing shader" << std::endl;
         reloadCompute = false;
     }
@@ -147,14 +165,56 @@ void Water::render()
     waterShader->setInt("tex", 0);
     texture->bind(0);
 
-	glDisable(GL_CULL_FACE);
+    glDisable(GL_CULL_FACE);
     glEnable(GL_BLEND);
-    glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     glBindVertexArray(VAO);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glDrawElements(GL_TRIANGLES, idx, GL_UNSIGNED_INT, 0);
-    glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     glDisable(GL_BLEND);
     glEnable(GL_CULL_FACE);
     glBindVertexArray(0);
+}
+
+void Water::addDrop(glm::vec2 center, float radius, float strength)
+{
+    drop->use();
+    drop->setVec2("center", center);
+    drop->setFloat("radius", radius);
+    drop->setFloat("strength", strength);
+    texture->bindImage(0, GL_READ_ONLY);
+    copyTexture->bindImage(1, GL_WRITE_ONLY);
+    glDispatchCompute(width, height, 1);
+    glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+    swapTexture();
+}
+
+void Water::stepSimulation()
+{
+    update->use();
+    glm::vec2 delta = glm::vec2(1.0f/width, 1.0f/height);
+    update->setVec2("delta", delta);
+    texture->bindImage(0, GL_READ_ONLY);
+    copyTexture->bindImage(1, GL_WRITE_ONLY);
+    glDispatchCompute(width, height, 1);
+    glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+    swapTexture();
+}
+
+void Water::updateNormals()
+{
+    normal->use();
+    texture->bindImage(0, GL_READ_ONLY);
+    copyTexture->bindImage(1, GL_WRITE_ONLY);
+    glDispatchCompute(width, height, 1);
+    glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+    swapTexture();
+}
+
+void Water::swapTexture()
+{
+    WaterTexture *temp = copyTexture;
+    copyTexture = texture;
+    texture = temp;
 }

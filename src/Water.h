@@ -14,8 +14,12 @@ struct GridVertex{
 class Water
 {
 public:
-    Water(unsigned int width = 512, unsigned int height = 512);
+    Water(unsigned int width = 16, unsigned int height = 16);
     ~Water();
+
+    void addDrop(glm::vec2 center, float radius, float strength);
+    void stepSimulation();
+    void updateNormals();
 
     void render();
 private:
@@ -23,14 +27,24 @@ private:
     unsigned int width, height;
     unsigned int VBO, VAO, EBO;
 
+    unsigned int VBO2, VAO2, EBO2;
+
     unsigned int idx=0;
 
     glm::mat4 model;
 
     ComputeShader *test;
-    Shader *waterShader;
+    ComputeShader *normal;
+    ComputeShader *drop;
+    ComputeShader *update;
+
     WaterTexture *texture;
+    WaterTexture *copyTexture;
+
+    Shader *waterShader;
 
     bool reloadCompute = false;
     bool reloadShader = false;
+
+    void swapTexture();
 };

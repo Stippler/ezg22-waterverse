@@ -88,6 +88,12 @@ void ComputeShader::setVec3(const GLchar *name, glm::vec3 &vector)
     glUniform3fv(projectionLoc, 1, &vector[0]);
 }
 
+void ComputeShader::setVec2(const GLchar *name, glm::vec2 &vector)
+{
+    unsigned int projectionLoc = glGetUniformLocation(ID, name);
+    glUniform2fv(projectionLoc, 1, &vector[0]);
+}
+
 void ComputeShader::setFloat(const GLchar *name, float value)
 {
     unsigned int projectionLoc = glGetUniformLocation(ID, name);

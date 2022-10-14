@@ -12,7 +12,15 @@ uniform mat4 projection;
 uniform sampler2D tex;
 
 mat4 buildTranslation(vec3 delta) {
-    return mat4(vec4(1.0, 0.0, 0.0, 0.0), vec4(0.0, 1.0, 0.0, 0.0), vec4(0.0, 0.0, 1.0, 0.0), vec4(delta, 1.0));
+    mat4 trans = mat4(1.0);
+    trans[0][0] = 1;
+    trans[1][1] = 1;
+    trans[2][2] = 1;
+    trans[3][3] = 1;
+    trans[3][0] = delta[0];
+    trans[3][1] = delta[1];
+    trans[3][2] = delta[2];
+    return trans;
 }
 
 mat4 buildScaling(vec3 delta) {
@@ -27,8 +35,8 @@ void main() {
     mat4 trans = mat4(1.0f);
 
     float scale = 20;
-    vec3 texCol = texture(tex, fragTexCoord).rgb;      
-    trans *= buildTranslation(vec3(-scale/2, texCol.r, -scale/2));
+    vec4 texCol = texture(tex, texCoord);      
+    trans *= buildTranslation(vec3(-scale/2, texCol.g, -scale/2));
     trans *= buildScaling(vec3(scale, 1.0, scale));
 
     gl_Position = projection * view * trans * vec4(pos, 1.0);
