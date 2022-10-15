@@ -50,9 +50,23 @@ void mouseButtonCallback(GLFWwindow *window, int button, int action, int mods)
     }
 }
 
-void framebufferSizeCallback(GLFWwindow *window, int width, int height)
+void framebufferSizeCallback(GLFWwindow *window, int newWidth, int newHeight)
 {
+    width=newWidth;
+    height=newHeight;
     glViewport(0, 0, width, height);
+}
+
+void Window::setMatrices(Shader *shader)
+{
+    glm::mat4 proj = glm::perspective(glm::radians(45.0f), (float)Window::getWidth() / (float)Window::getHeight(), 0.1f, 100.0f);
+    auto viewMatrix = Window::getCamera()->getViewMatrix();
+    glm::vec3 viewPos = Window::getCamera()->getPosition();
+
+    shader->setMat4("projection", proj);
+    shader->setMat4("view", viewMatrix);
+    shader->setVec3("viewPos", viewPos);
+    shader->setMat4("model", glm::mat4(1.0f));
 }
 
 void Window::processInput()

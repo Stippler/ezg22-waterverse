@@ -1,0 +1,28 @@
+#version 450 core
+
+const float PI = 3.141592653589793;
+
+layout(local_size_x = 1, local_size_y = 1) in;
+layout(binding = 0, rgba32f) uniform readonly image2D imgInput;
+layout(binding = 1, rgba32f) uniform writeonly image2D imgOutput;
+
+uniform vec2 center;
+uniform float radius;
+uniform float strength;
+
+void main() {
+  ivec2 texelCoord = ivec2(gl_GlobalInvocationID.xy);
+  float x = float(texelCoord.x) / gl_NumWorkGroups.x;
+  float y = float(texelCoord.y) / gl_NumWorkGroups.y;
+  vec2 coord = vec2(x, y);
+
+  /* get vertex info */
+  vec4 info = imageLoad(imgInput, texelCoord);
+
+  /* add the drop to the height */
+  float drop = max(0.0, 1.0 - length(center * 0.5 + 0.5 - coord) / radius);
+  drop = 0.5 - cos(drop * PI) * 0.5;
+  info.x += drop * strength;
+
+  imageStore(imgOutput, texelCoord, info);
+}

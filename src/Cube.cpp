@@ -97,6 +97,7 @@ void Cube::draw(Shader &shader)
 	shader.use();
 	int modelLoc = glGetUniformLocation(shader.ID, "model");
 	shader.setMat4("model", model);
+
 	glActiveTexture(GL_TEXTURE0);
 	glUniform1i(glGetUniformLocation(shader.ID, "texture_diffuse1"), texture);
     glBindTexture(GL_TEXTURE_2D, texture);
