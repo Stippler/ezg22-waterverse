@@ -31,7 +31,10 @@ Water::Water(unsigned int width, unsigned int height) : width(width), height(hei
 
     waterShader = new Shader("assets/shaders/water/water.vert",
                              "assets/shaders/water/water.frag");
+
+    std::cout << width << "   " << height << std::endl;
     texture = new WaterTexture(width, height);
+    copyTexture = new WaterTexture(width, height);
 
     FileWatcher::add("assets/shaders/water/test.comp", [&]()
                      { reloadCompute = true; });
@@ -145,10 +148,23 @@ void Water::render()
         reloadCompute = false;
     }
 
-    test->use();
-    texture->bindImage(0, GL_WRITE_ONLY);
-    glDispatchCompute(width, height, 1);
-    glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+    static int ledl = 0;
+
+    if(ledl%1000==0) {
+        addDrop(glm::vec2(0.5, 0), 0.1, 3);
+        addDrop(glm::vec2(-0.5, 0), 0.1, 3);
+    }
+    ledl++;
+
+    // test->use();
+    // texture->bindImage(0, GL_WRITE_ONLY);
+    // glDispatchCompute(texture->width, texture->height, 1);
+    // glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+    // glFinish();
+
+    stepSimulation();
+    stepSimulation();
+    updateNormals();
 
     if (reloadShader)
     {
@@ -174,7 +190,6 @@ void Water::render()
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     glDisable(GL_BLEND);
     glEnable(GL_CULL_FACE);
-    glBindVertexArray(0);
 }
 
 void Water::addDrop(glm::vec2 center, float radius, float strength)
@@ -185,7 +200,7 @@ void Water::addDrop(glm::vec2 center, float radius, float strength)
     drop->setFloat("strength", strength);
     texture->bindImage(0, GL_READ_ONLY);
     copyTexture->bindImage(1, GL_WRITE_ONLY);
-    glDispatchCompute(width, height, 1);
+    glDispatchCompute(texture->width, texture->height, 1);
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
     swapTexture();
 }
@@ -193,11 +208,9 @@ void Water::addDrop(glm::vec2 center, float radius, float strength)
 void Water::stepSimulation()
 {
     update->use();
-    glm::vec2 delta = glm::vec2(1.0f/width, 1.0f/height);
-    update->setVec2("delta", delta);
     texture->bindImage(0, GL_READ_ONLY);
     copyTexture->bindImage(1, GL_WRITE_ONLY);
-    glDispatchCompute(width, height, 1);
+    glDispatchCompute(texture->width, texture->height, 1);
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
     swapTexture();
 }
@@ -207,7 +220,7 @@ void Water::updateNormals()
     normal->use();
     texture->bindImage(0, GL_READ_ONLY);
     copyTexture->bindImage(1, GL_WRITE_ONLY);
-    glDispatchCompute(width, height, 1);
+    glDispatchCompute(texture->width, texture->height, 1);
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
     swapTexture();
 }

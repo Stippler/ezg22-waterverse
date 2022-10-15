@@ -1,35 +1,30 @@
 #version 450 core
 
-layout (local_size_x = 1, local_size_y = 1) in;
-layout (binding = 0, rg32f) uniform readonly image2D imgInput;
-layout (binding = 1, rg32f) uniform writeonly image2D imgOutput;
-
-uniform vec2 delta;
+layout(local_size_x = 1, local_size_y = 1) in;
+layout(binding = 0, rgba32f) uniform readonly image2D imgInput;
+layout(binding = 1, rgba32f) uniform writeonly image2D imgOutput;
 
 void main() {
   /* get vertex info */
-  float x = float(texelCoord.x)/gl_NumWorkGroups.x;
-  float y = float(texelCoord.y)/gl_NumWorkGroups.y;
-  vec2 coord = vec2(x, y);
+  ivec2 texelCoord = ivec2(gl_GlobalInvocationID.xy);
+  vec4 info = imageLoad(imgInput, texelCoord);
 
-  vec4 info = texture2D(imgInput, coord);
-
-    /* calculate average neighbor height */
-  vec2 dx = vec2(delta.x, 0.0);
-  vec2 dy = vec2(0.0, delta.y);
-  float average = (texture2D(imgInput, coord - dx).r +
-      texture2D(imgInput, coord - dy).r +
-      texture2D(imgInput, coord + dx).r +
-      texture2D(imgInput, coord + dy).r) * 0.25;
+  /* calculate average neighbor height */
+  ivec3 offset = ivec3(1, 1, 0);
+  float hL = imageLoad(imgInput, texelCoord-offset.xz).x;
+  float hR = imageLoad(imgInput, texelCoord+offset.xz).x;
+  float hD = imageLoad(imgInput, texelCoord-offset.zy).x;
+  float hU = imageLoad(imgInput, texelCoord+offset.zy).x;
+  float average = (hL+hR+hD+hU)/4;
 
   /* change the velocity to move toward the average */
-  info.g += (average - info.r) * 2.0;
+  info.y += (average - info.x) * 2.0;
 
   /* attenuate the velocity a little so waves do not last forever */
-  info.g *= 0.995;
+  info.y *= 0.995;
 
   /* move the vertex along the velocity */
-  info.r += info.g;
+  info.x += info.y;
 
-  imageStore(imgOutput, coord, info);
+  imageStore(imgOutput, texelCoord, info);
 }

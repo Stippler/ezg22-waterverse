@@ -35,9 +35,11 @@ void main() {
     mat4 trans = mat4(1.0f);
 
     float scale = 20;
-    vec4 texCol = texture(tex, texCoord);      
-    trans *= buildTranslation(vec3(-scale/2, texCol.g, -scale/2));
-    trans *= buildScaling(vec3(scale, 1.0, scale));
+
+    float height = texture(tex, texCoord).x;      
+
+    trans *= buildTranslation(vec3(-scale/2, height-5, -scale/2));
+    trans *= buildScaling(vec3(scale, 1, scale));
 
     gl_Position = projection * view * trans * vec4(pos, 1.0);
     // fragPos = vec3(model*vec4(pos, 1.0));
