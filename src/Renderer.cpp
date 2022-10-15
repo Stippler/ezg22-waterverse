@@ -22,7 +22,6 @@ Water *water;
 #include "PointLight.h"
 #include "Material.h"
 
-Shader *ourShader;
 bool reloadShader = false;
 
 unsigned int modelLoc, viewLoc, projectionLoc;
@@ -54,19 +53,9 @@ Material *coral;
 void Renderer::init()
 {
     water = new Water();
-
-    const char *vertexShader = "assets/shaders/vertex.vert";
-    const char *fragmentShader = "assets/shaders/fragment.frag";
-    ourShader = new Shader(vertexShader, fragmentShader);
-
-    FileWatcher::add(vertexShader, []()
-                     { reloadShader = true; });
-    FileWatcher::add(fragmentShader, []()
-                     { reloadShader = true; });
-
     const char *vertexShader2 = "assets/shaders/depth.vert";
     const char *fragmentShader2 = "assets/shaders/depth.frag";
-    depthShader = new Shader(vertexShader, fragmentShader);
+    depthShader = new Shader(vertexShader2, fragmentShader2);
 
     FileWatcher::add(vertexShader2, []()
                      { reloadShader = true; });
@@ -75,7 +64,7 @@ void Renderer::init()
 
     const char *vertexShader3 = "assets/shaders/shadow.vert";
     const char *fragmentShader3 = "assets/shaders/shadow.frag";
-    shadowShader = new Shader(vertexShader, fragmentShader);
+    shadowShader = new Shader(vertexShader3, fragmentShader3);
 
     FileWatcher::add(vertexShader3, []()
                      { reloadShader = true; });
@@ -84,7 +73,7 @@ void Renderer::init()
 
     const char *vertexShader4 = "assets/shaders/debugShadow.vert";
     const char *fragmentShader4 = "assets/shaders/debugShadow.frag";
-    debugShadow = new Shader(vertexShader, fragmentShader);
+    debugShadow = new Shader(vertexShader4, fragmentShader4);
 
     FileWatcher::add(vertexShader4, []()
                      { reloadShader = true; });
@@ -94,9 +83,9 @@ void Renderer::init()
     //cubes.push_back(*new Cube("assets/container.jpg", glm::vec3(0.0f, 0.0f, 0.0f)));
     //cubes.push_back(*new Cube("assets/container.jpg", glm::vec3(2.0f, 5.0f, -15.0f)));
     //cubes.push_back(*new Cube("assets/container.jpg", glm::vec3(-1.5f, -2.2f, -2.5f)));
-    cubes.push_back(new Cube("assets/container.jpg", glm::vec3(0.0f, 0.0f, 0.0f)));
-    cubes.push_back(new Cube("assets/container.jpg", glm::vec3(2.0f, 5.0f, -15.0f)));
-    cubes.push_back(new Cube("assets/container.jpg", glm::vec3(-1.5f, -2.2f, -2.5f)));
+    // cubes.push_back(new Cube("assets/container.jpg", glm::vec3(0.0f, 0.0f, 0.0f)));
+    // cubes.push_back(new Cube("assets/container.jpg", glm::vec3(2.0f, 5.0f, -15.0f)));
+    // cubes.push_back(new Cube("assets/container.jpg", glm::vec3(-1.5f, -2.2f, -2.5f)));
 
     // models.push_back(new Model("assets/models/fish/fish.obj"));
     // models.push_back(new Model("assets/models/tigershark/untitled.obj", glm::vec3(5.0f, 5.0f, -15.0f)));
@@ -107,30 +96,22 @@ void Renderer::init()
     //ourModel = new Model("assets/models/backpack/backpack.obj");
     fish = new Model("assets/models/fish/fish.obj");
     //rock = new Model("assets/models/rock/Rock1/Rock1.obj");
-    shark = new Model("assets/models/tigershark/untitled.obj");
-    ground = new Model("assets/models/floor/floor.obj");
+    shark = new Model("assets/models/tigershark/untitled.obj", glm::vec3(0.0, -8.0, -0.0));
+    ground = new Model("assets/models/floor/floor.obj", glm::vec3(0.0, -10.0, 0.0));
     crate = new Model("assets/models/Crate/Crate1.obj");
 
     //pokeball = new Model("C:/Users/chris/Downloads/pokeball/Pokeball.obj");
 
-    ourShader = new Shader(vertexShader, fragmentShader);
-    ourShader->use();
-
-
     // Initialise lights
     light = new DirLight(glm::vec3(1.0f, -1.0f, 0.0f), glm::vec3(0.2f, 0.2f, 0.2f), glm::vec3(0.5f, 0.5f, 0.5f), glm::vec3(1.0f, 1.0f, 1.0f));
-    ourShader->setDirLight("light", light);
-    shadowShader->setDirLight("light", light);
-
     plight = new PointLight(glm::vec3(-0.5f, -2.2f, -2.5f), glm::vec3(0.2f, 0.2f, 0.2f), glm::vec3(0.5f, 0.5f, 0.5f), glm::vec3(1.0f, 1.0f, 1.0f), 1.0, 0.7, 1.8);
-    ourShader->setPointLight("plight", plight);
-    shadowShader->setPointLight("plight", plight);
-
     coral = new Material(glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(0.5f, 0.5f, 0.5f), 32.0f);
-    ourShader->setMaterial("material", coral);
-    shadowShader->setMaterial("material", coral);
-
     glm::vec3 viewPos = Window::getCamera()->getPosition();
+
+    shadowShader->use();
+    shadowShader->setDirLight("light", light);
+    shadowShader->setPointLight("plight", plight);
+    shadowShader->setMaterial("material", coral);
     shadowShader->setVec3("viewPos", viewPos);
 
     // Shadow mapping
@@ -159,11 +140,10 @@ void Renderer::init()
 void Renderer::free()
 {
     // Delete shaders
-    delete ourShader;
     delete shadowShader;
     delete depthShader;
     delete debugShadow;
-    delete water;
+    // delete water;
     for (auto model : models)
     {
         delete model;
@@ -184,8 +164,10 @@ void Renderer::render()
 {
     if (reloadShader)
     {
-        ourShader->reload();
         std::cout << "reload ourShader" << std::endl;
+        debugShadow->reload();
+        shadowShader->reload();
+        depthShader->reload();
         reloadShader = false;
     }
 
@@ -202,7 +184,7 @@ void Renderer::render()
 	lightSpaceMatrix = lightProjection * lightView;
 
     depthShader->use();
-    Window::setMatrices(ourShader);
+    Window::setMatrices(depthShader);
     depthShader->setMat4("lightSpaceMatrix", lightSpaceMatrix);
 
     glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
@@ -212,15 +194,15 @@ void Renderer::render()
     glCullFace(GL_FRONT);
     glDisable(GL_CULL_FACE);
     glm::mat4 mod = glm::mat4(1.0f);
-    depthShader->setMat4("model", glm::translate(glm::mat4(1.0f), glm::vec3(0.0, -8.0, -0.0))*glm::scale(mod,glm::vec3(1,1,1)));
+    // depthShader->setMat4("model", glm::translate(glm::mat4(1.0f), glm::vec3(0.0, -8.0, -0.0))*glm::scale(mod,glm::vec3(1,1,1)));
     shark->draw(*depthShader);
-    depthShader->setMat4("model", glm::translate(glm::mat4(1.0f), glm::vec3(-3.5, -5.2, -2.5))*glm::scale(mod,glm::vec3(.2,.2,.2)));
-    fish->draw(*depthShader);
-    depthShader->setMat4("model", glm::translate(glm::mat4(1.0f), glm::vec3(2.0f, -5.0f, 7.0f))*glm::scale(mod,glm::vec3(.5,.5,.5)));
-    crate->draw(*depthShader);
-    depthShader->setMat4("model", glm::translate(glm::mat4(1.0f), glm::vec3(-1.5f, -2.2f, -2.5f))*glm::scale(mod,glm::vec3(.5,.5,.5)));
-    crate->draw(*depthShader);
-    depthShader->setMat4("model", glm::translate(glm::mat4(1.0f), glm::vec3(0.0, -10.0, 0.0))*glm::scale(mod,glm::vec3(1,1,1)));
+    // depthShader->setMat4("model", glm::translate(glm::mat4(1.0f), glm::vec3(-3.5, -5.2, -2.5))*glm::scale(mod,glm::vec3(.2,.2,.2)));
+    // fish->draw(*depthShader);
+    // depthShader->setMat4("model", glm::translate(glm::mat4(1.0f), glm::vec3(2.0f, -5.0f, 7.0f))*glm::scale(mod,glm::vec3(.5,.5,.5)));
+    // crate->draw(*depthShader);
+    // depthShader->setMat4("model", glm::translate(glm::mat4(1.0f), glm::vec3(-1.5f, -2.2f, -2.5f))*glm::scale(mod,glm::vec3(.5,.5,.5)));
+    // crate->draw(*depthShader);
+    // depthShader->setMat4("model", glm::translate(glm::mat4(1.0f), glm::vec3(0.0, -10.0, 0.0))*glm::scale(mod,glm::vec3(1,1,1)));
     ground->draw(*depthShader);
     glCullFace(GL_BACK);
 
@@ -232,6 +214,10 @@ void Renderer::render()
 
     // Render scene normally
     shadowShader->use();
+    shadowShader->setDirLight("light", light);
+    shadowShader->setPointLight("plight", plight);
+    shadowShader->setMaterial("material", coral);
+
     Window::setMatrices(shadowShader);
     // auto viewMatrix = Window::getCamera()->getViewMatrix();
     // shadowShader->setMat4("view", viewMatrix);
@@ -243,30 +229,18 @@ void Renderer::render()
 	glBindTexture(GL_TEXTURE_2D, depthMap);
 
     mod = glm::mat4(1.0f);
-    shadowShader->setMat4("model", glm::translate(glm::mat4(1.0f), glm::vec3(0.0, -8.0, -0.0))*glm::scale(mod,glm::vec3(1,1,1)));
+    // shadowShader->setMat4("model", glm::translate(glm::mat4(1.0f), glm::vec3(0.0, -8.0, -0.0))*glm::scale(mod,glm::vec3(1,1,1)));
     shark->draw(*shadowShader);
-    shadowShader->setMat4("model", glm::translate(glm::mat4(1.0f), glm::vec3(-3.5, -5.2, -2.5))*glm::scale(mod,glm::vec3(.2,.2,.2)));
-    fish->draw(*shadowShader);
-    shadowShader->setMat4("model", glm::translate(glm::mat4(1.0f), glm::vec3(2.0f, -5.0f, 7.0f))*glm::scale(mod,glm::vec3(.5,.5,.5)));
-    crate->draw(*shadowShader);
-    shadowShader->setMat4("model", glm::translate(glm::mat4(1.0f), glm::vec3(-1.5f, -2.2f, -2.5f))*glm::scale(mod,glm::vec3(.5,.5,.5)));
-    crate->draw(*shadowShader);
-    shadowShader->setMat4("model", glm::translate(glm::mat4(1.0f), glm::vec3(0.0, -10.0, 0.0))*glm::scale(mod,glm::vec3(1,1,1)));
+    // shadowShader->setMat4("model", glm::translate(glm::mat4(1.0f), glm::vec3(-3.5, -5.2, -2.5))*glm::scale(mod,glm::vec3(.2,.2,.2)));
+    // fish->draw(*shadowShader);
+    // shadowShader->setMat4("model", glm::translate(glm::mat4(1.0f), glm::vec3(2.0f, -5.0f, 7.0f))*glm::scale(mod,glm::vec3(.5,.5,.5)));
+    // crate->draw(*shadowShader);
+    // shadowShader->setMat4("model", glm::translate(glm::mat4(1.0f), glm::vec3(-1.5f, -2.2f, -2.5f))*glm::scale(mod,glm::vec3(.5,.5,.5)));
+    // crate->draw(*shadowShader);
+    // shadowShader->setMat4("model", glm::translate(glm::mat4(1.0f), glm::vec3(0.0, -10.0, 0.0))*glm::scale(mod,glm::vec3(1,1,1)));
     ground->draw(*shadowShader);
 
-    // ourShader->use();
-
-    // for (auto model : models)
-    // {
-    //     model->draw(*ourShader);
-    // }
-
-    // for (auto cube : cubes)
-    // {
-    //     cube->draw(*ourShader);
-    // }
-
-    water->render();
+    // water->render();
 
     /*debugShadow->use();
     debugShadow->setInt("depthMap", 0);
@@ -302,21 +276,3 @@ void Renderer::render()
     
 }
 
-// void initOurShader()
-// {
-//     ourShader->use();
-//     modelLoc = glGetUniformLocation(ourShader->ID, "model");
-//     glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-//     viewLoc = glGetUniformLocation(ourShader->ID, "view");
-//     glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
-//     projectionLoc = glGetUniformLocation(ourShader->ID, "projection");
-//     glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(proj));
-// 
-//     shadowShader->use();
-//     modelLoc = glGetUniformLocation(shadowShader->ID, "model");
-//     glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-//     viewLoc = glGetUniformLocation(shadowShader->ID, "view");
-//     glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
-//     projectionLoc = glGetUniformLocation(shadowShader->ID, "projection");
-//     glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(proj));
-// }

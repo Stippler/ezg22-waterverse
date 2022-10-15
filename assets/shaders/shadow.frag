@@ -116,8 +116,10 @@ void main()
     vec3 norm = normalize(Normal);
     vec3 viewDir = normalize(viewPos - FragPos);
     float shadow = ShadowCalculation(FragPosLightSpace, norm);
-    vec3 all_lights = CalcDirLight(light, norm, viewDir, shadow);
+    vec3 all_lights = vec3(0, 0, 0);
+    all_lights += CalcDirLight(light, norm, viewDir, shadow);
     all_lights += CalcPointLight(plight, norm, FragPos, viewDir);
 
+    // 
     FragColor = vec4(all_lights, 1.0);
 }
