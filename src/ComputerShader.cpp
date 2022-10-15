@@ -51,6 +51,7 @@ bool ComputeShader::reload()
     }
     ID = newId;
     glDeleteShader(compute);
+    return true;
 }
 
 // activate the shader
