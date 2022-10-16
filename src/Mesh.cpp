@@ -1,5 +1,8 @@
 #include "Mesh.h"
 
+using namespace std; 
+#define MAX_BONE_INFLUENCE 4
+
 Mesh::Mesh(vector<Vertex> vertices, vector<unsigned int> indices, vector<Texture> textures)
 {
     this->vertices = vertices;
