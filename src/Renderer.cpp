@@ -18,8 +18,10 @@
 // Water
 Water *water;
 
+#include "DirLight.h"
+#include "PointLight.h"
+#include "Material.h"
 
-Shader *ourShader;
 bool reloadShader = false;
 
 unsigned int modelLoc, viewLoc, projectionLoc;
@@ -27,117 +29,121 @@ unsigned int modelLoc, viewLoc, projectionLoc;
 std::vector<Model *> models;
 std::vector<Cube *> cubes;
 
-struct DirLight
-{
-    glm::vec3 direction;
-    glm::vec3 ambient;
-    glm::vec3 diffuse;
-    glm::vec3 specular;
+// init depth shader
+Shader *depthShader;
+Shader *shadowShader;
+Shader *debugShadow;
 
-    DirLight(glm::vec3 direction, glm::vec3 ambient, glm::vec3 diffuse, glm::vec3 specular)
-    {
-        this->direction = direction;
-        this->ambient = ambient;
-        this->diffuse = diffuse;
-        this->specular = specular;
-    }
-};
+Model *shark;
+Model *fish;
+Model *ground;
+Model *pokeball;
+Model *crate;
 
-struct PointLight
-{
-    glm::vec3 position;
+// Shadow predefines
+unsigned int depthMapFBO;
+const unsigned int SHADOW_WIDTH = 1024, SHADOW_HEIGHT = 1024;
+unsigned int depthMap;
 
-    glm::vec3 ambient;
-    glm::vec3 diffuse;
-    glm::vec3 specular;
-
-    float constant;
-    float linear;
-    float quadratic;
-
-    PointLight(glm::vec3 position, glm::vec3 ambient, glm::vec3 diffuse, glm::vec3 specular, float constant, float linear, float quadratic)
-    {
-        this->position = position;
-        this->ambient = ambient;
-        this->diffuse = diffuse;
-        this->specular = specular;
-        this->constant = constant;
-        this->linear = linear;
-        this->quadratic = quadratic;
-    }
-};
-
-struct Material
-{
-    glm::vec3 ambient;
-    glm::vec3 diffuse;
-    glm::vec3 specular;
-    float shininess;
-
-    Material(glm::vec3 ambient, glm::vec3 diffuse, glm::vec3 specular, float shininess)
-    {
-        this->ambient = ambient;
-        this->diffuse = diffuse;
-        this->specular = specular;
-        this->shininess = shininess;
-    }
-};
+//lights predefines
+DirLight *light;
+PointLight *plight;
+Material *coral;
 
 void Renderer::init()
 {
     water = new Water();
+    const char *vertexShader2 = "assets/shaders/depth.vert";
+    const char *fragmentShader2 = "assets/shaders/depth.frag";
+    depthShader = new Shader(vertexShader2, fragmentShader2);
 
-    // Rest:
-
-    const char *vertexShader = "assets/shaders/vertex.vert";
-    const char *fragmentShader = "assets/shaders/fragment.frag";
-    
-    FileWatcher::add(vertexShader, []()
+    FileWatcher::add(vertexShader2, []()
                      { reloadShader = true; });
-    FileWatcher::add(fragmentShader, []()
+    FileWatcher::add(fragmentShader2, []()
                      { reloadShader = true; });
 
-    cubes.push_back(new Cube("assets/container.jpg", glm::vec3(0.0f, 0.0f, 0.0f)));
-    cubes.push_back(new Cube("assets/container.jpg", glm::vec3(2.0f, 5.0f, -15.0f)));
-    cubes.push_back(new Cube("assets/container.jpg", glm::vec3(-1.5f, -2.2f, -2.5f)));
+    const char *vertexShader3 = "assets/shaders/shadow.vert";
+    const char *fragmentShader3 = "assets/shaders/shadow.frag";
+    shadowShader = new Shader(vertexShader3, fragmentShader3);
 
-    models.push_back(new Model("assets/models/fish/fish.obj"));
-    models.push_back(new Model("assets/models/tigershark/untitled.obj", glm::vec3(5.0f, 5.0f, -15.0f)));
+    FileWatcher::add(vertexShader3, []()
+                     { reloadShader = true; });
+    FileWatcher::add(fragmentShader3, []()
+                     { reloadShader = true; });
+
+    const char *vertexShader4 = "assets/shaders/debugShadow.vert";
+    const char *fragmentShader4 = "assets/shaders/debugShadow.frag";
+    debugShadow = new Shader(vertexShader4, fragmentShader4);
+
+    FileWatcher::add(vertexShader4, []()
+                     { reloadShader = true; });
+    FileWatcher::add(fragmentShader4, []()
+                     { reloadShader = true; });
+
+    //cubes.push_back(*new Cube("assets/container.jpg", glm::vec3(0.0f, 0.0f, 0.0f)));
+    //cubes.push_back(*new Cube("assets/container.jpg", glm::vec3(2.0f, 5.0f, -15.0f)));
+    //cubes.push_back(*new Cube("assets/container.jpg", glm::vec3(-1.5f, -2.2f, -2.5f)));
+    // cubes.push_back(new Cube("assets/container.jpg", glm::vec3(0.0f, 0.0f, 0.0f)));
+    // cubes.push_back(new Cube("assets/container.jpg", glm::vec3(2.0f, 5.0f, -15.0f)));
+    // cubes.push_back(new Cube("assets/container.jpg", glm::vec3(-1.5f, -2.2f, -2.5f)));
+
+    // models.push_back(new Model("assets/models/fish/fish.obj"));
+    // models.push_back(new Model("assets/models/tigershark/untitled.obj", glm::vec3(5.0f, 5.0f, -15.0f)));
     // models.push_back(new Model("assets/models/floor/floor.obj", glm::vec3(.0f, -5.0f, 0.f)));
 
-    ourShader = new Shader(vertexShader, fragmentShader);
-    ourShader->use();
+    //ourModel = new Model("assets/models/beach_umbrella/12984_beach_umbrella_v1_L2.obj");
+    //stbi_set_flip_vertically_on_load(true);
+    //ourModel = new Model("assets/models/backpack/backpack.obj");
+    fish = new Model("assets/models/fish/fish.obj");
+    //rock = new Model("assets/models/rock/Rock1/Rock1.obj");
+    shark = new Model("assets/models/tigershark/untitled.obj", glm::vec3(0.0, -8.0, -0.0));
+    ground = new Model("assets/models/floor/floor.obj", glm::vec3(0.0, -10.0, 0.0));
+    crate = new Model("assets/models/Crate/Crate1.obj");
 
-    DirLight light(glm::vec3(1.0f, -1.0f, 1.0f), glm::vec3(0.2f, 0.2f, 0.2f), glm::vec3(0.5f, 0.5f, 0.5f), glm::vec3(1.0f, 1.0f, 1.0f));
-    ourShader->setVec3("light.ambient", light.ambient);
-    ourShader->setVec3("light.diffuse", light.diffuse);
-    ourShader->setVec3("light.specular", light.specular);
-    ourShader->setVec3("light.direction", light.direction);
+    //pokeball = new Model("C:/Users/chris/Downloads/pokeball/Pokeball.obj");
 
-    PointLight plight(glm::vec3(-0.5f, -2.2f, -2.5f), glm::vec3(0.2f, 0.2f, 0.2f), glm::vec3(0.5f, 0.5f, 0.5f), glm::vec3(1.0f, 1.0f, 1.0f), 1.0, 0.7, 1.8);
-    ourShader->setVec3("plight.ambient", plight.ambient);
-    ourShader->setVec3("plight.diffuse", plight.diffuse);
-    ourShader->setVec3("plight.specular", plight.specular);
-    ourShader->setVec3("plight.position", plight.position);
-    ourShader->setFloat("plight.constant", plight.constant);
-    ourShader->setFloat("plight.linear", plight.linear);
-    ourShader->setFloat("plight.quadratic", plight.quadratic);
+    // Initialise lights
+    light = new DirLight(glm::vec3(1.0f, -1.0f, 0.0f), glm::vec3(0.2f, 0.2f, 0.2f), glm::vec3(0.5f, 0.5f, 0.5f), glm::vec3(1.0f, 1.0f, 1.0f));
+    plight = new PointLight(glm::vec3(-0.5f, -2.2f, -2.5f), glm::vec3(0.2f, 0.2f, 0.2f), glm::vec3(0.5f, 0.5f, 0.5f), glm::vec3(1.0f, 1.0f, 1.0f), 1.0, 0.7, 1.8);
+    coral = new Material(glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(0.5f, 0.5f, 0.5f), 32.0f);
     glm::vec3 viewPos = Window::getCamera()->getPosition();
-    ourShader->setVec3("viewPos", viewPos);
 
-    Material coral(glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(0.5f, 0.5f, 0.5f), 32.0f);
-    ourShader->setVec3("material.ambient", coral.ambient);
-    ourShader->setVec3("material.diffuse", coral.diffuse);
-    ourShader->setVec3("material.specular", coral.specular);
-    ourShader->setFloat("material.shininess", coral.shininess);
+    shadowShader->use();
+    shadowShader->setDirLight("light", light);
+    shadowShader->setPointLight("plight", plight);
+    shadowShader->setMaterial("material", coral);
+    shadowShader->setVec3("viewPos", viewPos);
+
+    // Shadow mapping
+    glEnable(GL_DEPTH_TEST);
+    glGenFramebuffers(1, &depthMapFBO);
+
+    glGenTextures(1, &depthMap);
+    glBindTexture(GL_TEXTURE_2D, depthMap);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER); 
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+    float borderColor[] = { 1.0, 1.0, 1.0, 1.0 };
+	glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);  
+
+    glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthMap, 0);
+    glDrawBuffer(GL_NONE);
+    glReadBuffer(GL_NONE);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     glEnable(GL_DEPTH_TEST);
 }
 
 void Renderer::free()
 {
-    delete ourShader;
-    delete water;
+    // Delete shaders
+    delete shadowShader;
+    delete depthShader;
+    delete debugShadow;
+    // delete water;
     for (auto model : models)
     {
         delete model;
@@ -146,35 +152,127 @@ void Renderer::free()
     {
         delete cube;
     }
+
+    // Delete models
+    delete shark;
+    delete fish;
+    delete ground;
+    delete crate;
 }
 
 void Renderer::render()
 {
     if (reloadShader)
     {
-        ourShader->reload();
         std::cout << "reload ourShader" << std::endl;
+        debugShadow->reload();
+        shadowShader->reload();
+        depthShader->reload();
         reloadShader = false;
     }
 
-    // glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-    glClearColor(0.9f, 0.9f, 0.9f, 1.0f);
+    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+    // glClearColor(0.9f, 0.9f, 0.9f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    ourShader->use();
+    // Render depth of scene to texture (from light's perspective)
+    glm::mat4 lightProjection, lightView;
+    glm::mat4 lightSpaceMatrix;
+    float near_plane = 1.0f, far_plane = 35.0f;
+    lightProjection = glm::ortho(-25.0f, 25.0f, -25.0f, 25.0f, near_plane, far_plane);
+    lightView = glm::lookAt(-10.0f*light->direction, glm::vec3(0.0f, -10.0f, 0.0f), glm::vec3(0.0, 1.0, 0.0));
+	lightSpaceMatrix = lightProjection * lightView;
 
-    Window::setMatrices(ourShader);
+    depthShader->use();
+    Window::setMatrices(depthShader);
+    depthShader->setMat4("lightSpaceMatrix", lightSpaceMatrix);
 
-    for (auto model : models)
-    {
-        model->draw(*ourShader);
-    }
+    glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
+    glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+    glClear(GL_DEPTH_BUFFER_BIT);
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_FRONT);
+    glDisable(GL_CULL_FACE);
+    glm::mat4 mod = glm::mat4(1.0f);
+    // depthShader->setMat4("model", glm::translate(glm::mat4(1.0f), glm::vec3(0.0, -8.0, -0.0))*glm::scale(mod,glm::vec3(1,1,1)));
+    shark->draw(*depthShader);
+    // depthShader->setMat4("model", glm::translate(glm::mat4(1.0f), glm::vec3(-3.5, -5.2, -2.5))*glm::scale(mod,glm::vec3(.2,.2,.2)));
+    fish->draw(*depthShader);
+    depthShader->setMat4("model", glm::translate(glm::mat4(1.0f), glm::vec3(2.0f, -5.0f, 7.0f))*glm::scale(mod,glm::vec3(.5,.5,.5)));
+    crate->draw(*depthShader);
+    depthShader->setMat4("model", glm::translate(glm::mat4(1.0f), glm::vec3(-1.5f, -2.2f, -2.5f))*glm::scale(mod,glm::vec3(.5,.5,.5)));
+    crate->draw(*depthShader);
+    // depthShader->setMat4("model", glm::translate(glm::mat4(1.0f), glm::vec3(0.0, -10.0, 0.0))*glm::scale(mod,glm::vec3(1,1,1)));
+    ground->draw(*depthShader);
+    glCullFace(GL_BACK);
 
-    for (auto cube : cubes)
-    {
-        cube->draw(*ourShader);
-    }
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    
+    // Reset viewport
+    glViewport(0, 0, Window::getWidth(), Window::getHeight());
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    // Render scene normally
+    shadowShader->use();
+    shadowShader->setDirLight("light", light);
+    shadowShader->setPointLight("plight", plight);
+    shadowShader->setMaterial("material", coral);
+
+    Window::setMatrices(shadowShader);
+    // auto viewMatrix = Window::getCamera()->getViewMatrix();
+    // shadowShader->setMat4("view", viewMatrix);
+    glm::vec3 viewPos = Window::getCamera()->getPosition();
+    shadowShader->setVec3("viewPos", viewPos);
+    shadowShader->setMat4("lightSpaceMatrix", lightSpaceMatrix);
+    glUniform1i(glGetUniformLocation(shadowShader->ID, "shadowMap"), 2);
+	glActiveTexture(GL_TEXTURE2);
+	glBindTexture(GL_TEXTURE_2D, depthMap);
+
+    mod = glm::mat4(1.0f);
+    // shadowShader->setMat4("model", glm::translate(glm::mat4(1.0f), glm::vec3(0.0, -8.0, -0.0))*glm::scale(mod,glm::vec3(1,1,1)));
+    shark->draw(*shadowShader);
+    // shadowShader->setMat4("model", glm::translate(glm::mat4(1.0f), glm::vec3(-3.5, -5.2, -2.5))*glm::scale(mod,glm::vec3(.2,.2,.2)));
+    fish->draw(*shadowShader);
+    shadowShader->setMat4("model", glm::translate(glm::mat4(1.0f), glm::vec3(2.0f, -5.0f, 7.0f))*glm::scale(mod,glm::vec3(.5,.5,.5)));
+    crate->draw(*shadowShader);
+    shadowShader->setMat4("model", glm::translate(glm::mat4(1.0f), glm::vec3(-1.5f, -2.2f, -2.5f))*glm::scale(mod,glm::vec3(.5,.5,.5)));
+    crate->draw(*shadowShader);
+    // shadowShader->setMat4("model", glm::translate(glm::mat4(1.0f), glm::vec3(0.0, -10.0, 0.0))*glm::scale(mod,glm::vec3(1,1,1)));
+    ground->draw(*shadowShader);
 
     water->render();
+
+    /*debugShadow->use();
+    debugShadow->setInt("depthMap", 0);
+    debugShadow->setFloat("near_plane", near_plane);
+    debugShadow->setFloat("far_plane", far_plane);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, depthMap);
+    unsigned int quadVAO = 0;
+    unsigned int quadVBO;
+    if (quadVAO == 0)
+    {
+        float quadVertices[] = {
+            // positions        // texture Coords
+            -1.0f,  1.0f, 0.0f, 0.0f, 1.0f,
+            -1.0f, -1.0f, 0.0f, 0.0f, 0.0f,
+             1.0f,  1.0f, 0.0f, 1.0f, 1.0f,
+             1.0f, -1.0f, 0.0f, 1.0f, 0.0f,
+        };
+        // setup plane VAO
+        glGenVertexArrays(1, &quadVAO);
+        glGenBuffers(1, &quadVBO);
+        glBindVertexArray(quadVAO);
+        glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), &quadVertices, GL_STATIC_DRAW);
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+        glEnableVertexAttribArray(2);
+        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+    }
+    glBindVertexArray(quadVAO);
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+    glBindVertexArray(0);*/
+    
 }
 

@@ -66,6 +66,7 @@ void Window::setMatrices(Shader *shader)
     shader->setMat4("projection", proj);
     shader->setMat4("view", viewMatrix);
     shader->setVec3("viewPos", viewPos);
+    shader->setMat4("model", glm::mat4(1.0f));
 }
 
 void Window::processInput()
