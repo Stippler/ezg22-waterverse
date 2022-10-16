@@ -181,15 +181,9 @@ void Water::render()
     waterShader->setInt("tex", 0);
     texture->bind(0);
 
-    glDisable(GL_CULL_FACE);
-    glEnable(GL_BLEND);
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     glBindVertexArray(VAO);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glDrawElements(GL_TRIANGLES, idx, GL_UNSIGNED_INT, 0);
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-    glDisable(GL_BLEND);
-    glEnable(GL_CULL_FACE);
 }
 
 void Water::addDrop(glm::vec2 center, float radius, float strength)
