@@ -12,15 +12,20 @@ uniform int animated;
 
 void main()
 {
-    mat4 BoneTransform = gBones[BoneIDs[0]]*Weights[0];
-    BoneTransform += gBones[BoneIDs[1]]*Weights[1];
-    BoneTransform += gBones[BoneIDs[2]]*Weights[2];
-    BoneTransform += gBones[BoneIDs[3]]*Weights[3];
-    if(Weights[0] > 0){
-        gl_Position = lightSpaceMatrix*model*BoneTransform*vec4(aPos, 1.0);
+    if(animated == 1){
+        mat4 BoneTransform = gBones[BoneIDs[0]]*Weights[0];
+        BoneTransform += gBones[BoneIDs[1]]*Weights[1];
+        BoneTransform += gBones[BoneIDs[2]]*Weights[2];
+        BoneTransform += gBones[BoneIDs[3]]*Weights[3];
+        if(Weights[0] > 0){
+            gl_Position = lightSpaceMatrix*model*BoneTransform*vec4(aPos, 1.0);
+        }
+        else{
+            gl_Position = lightSpaceMatrix*model*vec4(aPos, 1.0);
+        }
     }
     else{
-        gl_Position = lightSpaceMatrix*model*vec4(aPos, 1.0);
+        gl_Position = lightSpaceMatrix * model * vec4(aPos, 1.0);
     }
     //gl_Position = lightSpaceMatrix * model * vec4(aPos, 1.0);
 }
