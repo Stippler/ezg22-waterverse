@@ -61,7 +61,7 @@ int main(const int argc, const char **argv)
 
         // check and call events and swap the buffersprocessInput(window);
         Window::swapBuffers();
-        sleep(1/120.0);
+        //sleep(1/120.0);
     }
 
     Renderer::free();
