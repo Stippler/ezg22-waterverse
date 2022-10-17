@@ -112,7 +112,7 @@ void Renderer::init()
     //rock = new Model("assets/models/rock/Rock1/Rock1.obj");
     //tigershark = new Model("assets/models/tigershark/untitled.obj", glm::vec3(0.0, -8.0, -0.0));
     whiteshark = new AnimatedModel("assets/models/whiteshark/WhiteShark.gltf", glm::vec3(0.0, -8.0, -0.0));
-    fish = new AnimatedModel("C:/Users/chris/Downloads/guppy-fish/source/Guppy/Guppy.gltf", glm::vec3(0.0, -8.0, 12.0));
+    fish = new AnimatedModel("assets/models/guppy-fish/Guppy.gltf", glm::vec3(0.0, -8.0, 12.0));
     ground = new Model("assets/models/floor/floor.obj", glm::vec3(0.0, -10.0, 0.0));
     crate = new Model("assets/models/Crate/Crate1.obj");
 
