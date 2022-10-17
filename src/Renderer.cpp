@@ -16,6 +16,7 @@
 #include "Cube.h"
 #include "Water.h"
 #include "AnimatedModel.h"
+#include "ShadowMap.h"
 
 // Water
 Water *water;
@@ -40,16 +41,13 @@ Shader *skinningShader;
 
 Model *tigershark;
 AnimatedModel *whiteshark;
-Model *fish;
+AnimatedModel *fish;
 Model *ground;
 Model *pokeball;
 Model *crate;
 
 // Shadow predefines
-unsigned int depthMapFBO;
-const unsigned int SHADOW_WIDTH = 1024, SHADOW_HEIGHT = 1024;
-unsigned int depthMap;
-unsigned int depthMapSkinning;
+ShadowMap *shadowMap;
 
 //lights predefines
 DirLight *light;
@@ -110,10 +108,11 @@ void Renderer::init()
     
     //stbi_set_flip_vertically_on_load(true);
 
-    fish = new Model("assets/models/fish/fish.obj");
+    //fish = new Model("assets/models/fish/fish.obj");
     //rock = new Model("assets/models/rock/Rock1/Rock1.obj");
     //tigershark = new Model("assets/models/tigershark/untitled.obj", glm::vec3(0.0, -8.0, -0.0));
     whiteshark = new AnimatedModel("assets/models/whiteshark/WhiteShark.gltf", glm::vec3(0.0, -8.0, -0.0));
+    fish = new AnimatedModel("C:/Users/chris/Downloads/guppy-fish/source/Guppy/Guppy.gltf", glm::vec3(0.0, -8.0, 12.0));
     ground = new Model("assets/models/floor/floor.obj", glm::vec3(0.0, -10.0, 0.0));
     crate = new Model("assets/models/Crate/Crate1.obj");
 
@@ -136,29 +135,15 @@ void Renderer::init()
     skinningShader->setVec3("viewPos", viewPos);
 
     // Shadow mapping
-    glEnable(GL_DEPTH_TEST);
-    glGenFramebuffers(1, &depthMapFBO);
+    shadowMap = new ShadowMap();
+    shadowMap->init();
 
-    glGenTextures(1, &depthMap);
-    glBindTexture(GL_TEXTURE_2D, depthMap);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER); 
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-    float borderColor[] = { 1.0, 1.0, 1.0, 1.0 };
-	glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);  
-
-    glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthMap, 0);
-    glDrawBuffer(GL_NONE);
-    glReadBuffer(GL_NONE);
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
+    // Blending
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); 
 
+    // Init start application time for animation
     StartTimeMillis = glfwGetTime()*1000; 
 }
 
@@ -204,36 +189,65 @@ void Renderer::render()
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    // Shark Animation
+    // Animation
     long long CurrentTimeMillis = glfwGetTime() * 1000;
     float AnimationTimeSec = ((float)(CurrentTimeMillis - StartTimeMillis)) / 1000.0f;
 
-    vector<aiMatrix4x4> Transforms;
-    whiteshark->getBoneTransforms(AnimationTimeSec, Transforms);
-    glm::mat4 Transform[100] = {};
+    vector<aiMatrix4x4> sharkTransforms;
     int MAX_BONES = 100;
-    for (int i = 0; i < Transforms.size(); i++) {
+    glm::mat4 sharkTransform[MAX_BONES] = {};
+    whiteshark->getBoneTransforms(AnimationTimeSec, sharkTransforms);
+    for (int i = 0; i < sharkTransforms.size(); i++) {
         glm::mat4 t = glm::mat4(1.0f);
-        t[0][0] = Transforms[i][0][0];
-        t[0][1] = Transforms[i][0][1];
-        t[0][2] = Transforms[i][0][2];
-        t[0][3] = Transforms[i][0][3];
-        t[1][0] = Transforms[i][1][0];
-        t[1][1] = Transforms[i][1][1];
-        t[1][2] = Transforms[i][1][2];
-        t[1][3] = Transforms[i][1][3];
-        t[2][0] = Transforms[i][2][0];
-        t[2][1] = Transforms[i][2][1];
-        t[2][2] = Transforms[i][2][2];
-        t[2][3] = Transforms[i][2][3];
-        t[3][0] = Transforms[i][3][0];
-        t[3][1] = Transforms[i][3][1];
-        t[3][2] = Transforms[i][3][2];
-        t[3][3] = Transforms[i][3][3];
-        Transform[i] = t;
+        t[0][0] = sharkTransforms[i][0][0];
+        t[0][1] = sharkTransforms[i][0][1];
+        t[0][2] = sharkTransforms[i][0][2];
+        t[0][3] = sharkTransforms[i][0][3];
+        t[1][0] = sharkTransforms[i][1][0];
+        t[1][1] = sharkTransforms[i][1][1];
+        t[1][2] = sharkTransforms[i][1][2];
+        t[1][3] = sharkTransforms[i][1][3];
+        t[2][0] = sharkTransforms[i][2][0];
+        t[2][1] = sharkTransforms[i][2][1];
+        t[2][2] = sharkTransforms[i][2][2];
+        t[2][3] = sharkTransforms[i][2][3];
+        t[3][0] = sharkTransforms[i][3][0];
+        t[3][1] = sharkTransforms[i][3][1];
+        t[3][2] = sharkTransforms[i][3][2];
+        t[3][3] = sharkTransforms[i][3][3];
+        sharkTransform[i] = t;
     }
-    skinningShader->use();
-    glUniformMatrix4fv(glGetUniformLocation(skinningShader->ID, "gBones"), Transforms.size(), GL_TRUE, glm::value_ptr(Transform[0]));
+
+    vector<aiMatrix4x4> fishTransforms;
+    glm::mat4 fishTransform[MAX_BONES] = {};
+    fish->getBoneTransforms(AnimationTimeSec, fishTransforms);
+    for (int i = 0; i < fishTransforms.size(); i++) {
+        glm::mat4 t = glm::mat4(1.0f);
+        t[0][0] = fishTransforms[i][0][0];
+        t[0][1] = fishTransforms[i][0][1];
+        t[0][2] = fishTransforms[i][0][2];
+        t[0][3] = fishTransforms[i][0][3];
+        t[1][0] = fishTransforms[i][1][0];
+        t[1][1] = fishTransforms[i][1][1];
+        t[1][2] = fishTransforms[i][1][2];
+        t[1][3] = fishTransforms[i][1][3];
+        t[2][0] = fishTransforms[i][2][0];
+        t[2][1] = fishTransforms[i][2][1];
+        t[2][2] = fishTransforms[i][2][2];
+        t[2][3] = fishTransforms[i][2][3];
+        t[3][0] = fishTransforms[i][3][0];
+        t[3][1] = fishTransforms[i][3][1];
+        t[3][2] = fishTransforms[i][3][2];
+        t[3][3] = fishTransforms[i][3][3];
+        fishTransform[i] = t;
+    }
+
+    /*skinningShader->use();
+    glUniformMatrix4fv(glGetUniformLocation(skinningShader->ID, "gBones"), Transforms.size(), GL_TRUE, glm::value_ptr(sharkTransform[0]));
+    depthSkinning->use();
+    glUniformMatrix4fv(glGetUniformLocation(depthSkinning->ID, "gBones"), Transforms.size(), GL_TRUE, glm::value_ptr(sharkTransform[0]));*/
+
+    
 
     // Render depth of scene to texture (from light's perspective)
     glm::mat4 lightProjection, lightView;
@@ -244,27 +258,21 @@ void Renderer::render()
 	lightSpaceMatrix = lightProjection * lightView;
 
     depthSkinning->use();
-    Window::setMatrices(depthSkinning);
     depthSkinning->setMat4("lightSpaceMatrix", lightSpaceMatrix);
 
-    glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
-    glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
-    glClear(GL_DEPTH_BUFFER_BIT);
-    glEnable(GL_CULL_FACE);
-    glCullFace(GL_FRONT);
-    glDisable(GL_CULL_FACE);
-    glm::mat4 mod = glm::mat4(1.0f);
-    glUniformMatrix4fv(glGetUniformLocation(depthSkinning->ID, "gBones"), Transforms.size(), GL_TRUE, glm::value_ptr(Transform[0]));
-    glUniform1i(glGetUniformLocation(depthSkinning->ID, "animated"), 1);
+    shadowMap->renderActivate();
+    
+    depthSkinning->setInt("animated", 1);
+    glUniformMatrix4fv(glGetUniformLocation(depthSkinning->ID, "gBones"), sharkTransforms.size(), GL_TRUE, glm::value_ptr(sharkTransform[0]));
     whiteshark->draw(*depthSkinning);
-    glUniform1i(glGetUniformLocation(depthSkinning->ID, "animated"), 0);
+    glUniformMatrix4fv(glGetUniformLocation(depthSkinning->ID, "gBones"), fishTransforms.size(), GL_TRUE, glm::value_ptr(fishTransform[0]));
     fish->draw(*depthSkinning);
+    depthSkinning->setInt("animated", 0);
     crate->draw(*depthSkinning);
     crate->draw(*depthSkinning);
     ground->draw(*depthSkinning);
-    glCullFace(GL_BACK);
 
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    shadowMap->renderDeactivate();
     
     // Reset viewport
     glViewport(0, 0, Window::getWidth(), Window::getHeight());
@@ -283,25 +291,24 @@ void Renderer::render()
     Window::setMatrices(shadowShader);
     skinningShader->use();
     Window::setMatrices(skinningShader);
-    shadowShader->use();
 
+    shadowShader->use();
     shadowShader->setMat4("lightSpaceMatrix", lightSpaceMatrix);
     skinningShader->use();
     skinningShader->setMat4("lightSpaceMatrix", lightSpaceMatrix);
+
     shadowShader->use();
-    glUniform1i(glGetUniformLocation(shadowShader->ID, "shadowMap"), 2);
+    shadowShader->setInt("shadowMap", 2);
     skinningShader->use();
-    glUniform1i(glGetUniformLocation(skinningShader->ID, "shadowMap"), 2);
-	glActiveTexture(GL_TEXTURE2);
-	glBindTexture(GL_TEXTURE_2D, depthMap);
+    skinningShader->setInt("shadowMap", 2);
+    shadowMap->bindShadowMap();
 
-
+    glUniformMatrix4fv(glGetUniformLocation(skinningShader->ID, "gBones"), sharkTransforms.size(), GL_TRUE, glm::value_ptr(sharkTransform[0]));
     whiteshark->draw(*skinningShader);
+    glUniformMatrix4fv(glGetUniformLocation(skinningShader->ID, "gBones"), fishTransforms.size(), GL_TRUE, glm::value_ptr(fishTransform[0]));
+    fish->draw(*skinningShader);
     shadowShader->use();
-    fish->draw(*shadowShader);
-    shadowShader->setMat4("model", glm::translate(glm::mat4(1.0f), glm::vec3(2.0f, -5.0f, 7.0f))*glm::scale(mod,glm::vec3(.5,.5,.5)));
     crate->draw(*shadowShader);
-    shadowShader->setMat4("model", glm::translate(glm::mat4(1.0f), glm::vec3(-1.5f, -2.2f, -2.5f))*glm::scale(mod,glm::vec3(.5,.5,.5)));
     crate->draw(*shadowShader);
     ground->draw(*shadowShader);
 
