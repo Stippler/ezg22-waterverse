@@ -41,7 +41,6 @@ void main()
     TexCoord = aTexCoord;
     
     mat3 normalMatrix = transpose(inverse(mat3(view * model)));
-    //Normal = normalMatrix * (invertedNormals ? -aNormal : aNormal);
     Normal = normalMatrix * aNormal;
     
     gl_Position = projection * viewPos;

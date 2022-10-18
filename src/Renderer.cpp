@@ -78,6 +78,8 @@ float ourLerp(float a, float b, float f)
 
 void Renderer::init()
 {
+    glEnable(GL_DEPTH_TEST);
+
     water = new Water();
 
     const char *vertexShader = "assets/shaders/depthSkinning.vert";
@@ -162,9 +164,9 @@ void Renderer::init()
     //fish = new Model("assets/models/fish/fish.obj");
     //rock = new Model("assets/models/rock/Rock1/Rock1.obj");
     //tigershark = new Model("assets/models/tigershark/untitled.obj", glm::vec3(0.0, -8.0, -0.0));
-    /*stbi_set_flip_vertically_on_load(true);
-    crate = new Model("assets/models/backpack/backpack.obj");
-    stbi_set_flip_vertically_on_load(false);*/
+    stbi_set_flip_vertically_on_load(true);
+    //crate = new Model("assets/models/backpack/backpack.obj", glm::vec3(3.0, -9.5, 0.0));
+    stbi_set_flip_vertically_on_load(false);
     whiteshark = new AnimatedModel("assets/models/whiteshark/WhiteShark.gltf", glm::vec3(0.0, -8.0, -0.0));
     fish = new AnimatedModel("assets/models/guppy-fish/Guppy.gltf", glm::vec3(0.0, -8.0, 12.0));
     ground = new Model("assets/models/floor/floor.obj", glm::vec3(0.0, -10.0, 0.0));
@@ -232,7 +234,8 @@ void Renderer::init()
         std::cout << "Framebuffer not complete!" << std::endl;
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-    glGenFramebuffers(1, &ssaoFBO);  glGenFramebuffers(1, &ssaoBlurFBO);
+    glGenFramebuffers(1, &ssaoFBO);  
+    glGenFramebuffers(1, &ssaoBlurFBO);
     glBindFramebuffer(GL_FRAMEBUFFER, ssaoFBO);
     
     // SSAO color buffer
@@ -516,14 +519,13 @@ void Renderer::render()
     glm::mat4 view = Window::getCamera()->getViewMatrix();
     glm::mat4 model = glm::mat4(1.0f);
     shaderGeometryPass->use();
-    shaderGeometryPass->setMat4("projection", projection);
-    shaderGeometryPass->setMat4("view", view);
+    Window::setMatrices(shaderGeometryPass); 
     shaderGeometryPass->setInt("animated", 1); 
     glUniformMatrix4fv(glGetUniformLocation(shaderGeometryPass->ID, "gBones"), sharkTransforms.size(), GL_TRUE, glm::value_ptr(sharkTransform[0]));
     whiteshark->draw(*shaderGeometryPass);
     glUniformMatrix4fv(glGetUniformLocation(shaderGeometryPass->ID, "gBones"), fishTransforms.size(), GL_TRUE, glm::value_ptr(fishTransform[0]));
     fish->draw(*shaderGeometryPass);
-    shaderGeometryPass->setInt("animated", 0); 
+    shaderGeometryPass->setInt("animated", 0);
     crate->draw(*shaderGeometryPass);
     ground->draw(*shaderGeometryPass);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -543,7 +545,7 @@ void Renderer::render()
     glBindTexture(GL_TEXTURE_2D, gNormal);
     glActiveTexture(GL_TEXTURE2);
     glBindTexture(GL_TEXTURE_2D, noiseTexture);
-    //renderQuad();
+    renderQuad();
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     glBindFramebuffer(GL_FRAMEBUFFER, ssaoBlurFBO);
@@ -551,13 +553,13 @@ void Renderer::render()
     shaderSSAOBlur->use();
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, ssaoColorBuffer);
-    //renderQuad();
+    renderQuad();
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 
     // 4. lighting pass: traditional deferred Blinn-Phong lighting with added screen-space ambient occlusion
     // -----------------------------------------------------------------------------------------------------
-    /*glm::vec3 lightPos = glm::vec3(2.0, 6.0, -2.0);
+    glm::vec3 lightPos = glm::vec3(2.0, 6.0, -2.0);
     glm::vec3 lightColor = glm::vec3(0.2, 0.2, 0.7);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     shaderLightingPass->use();
@@ -578,10 +580,10 @@ void Renderer::render()
     glBindTexture(GL_TEXTURE_2D, gAlbedo);
     glActiveTexture(GL_TEXTURE3); // add extra SSAO texture to lighting pass
     glBindTexture(GL_TEXTURE_2D, ssaoColorBufferBlur);
-    renderQuad();*/
+    renderQuad();
     
     // Render depth of scene to texture (from light's perspective)
-    glm::mat4 lightProjection, lightView;
+    /*glm::mat4 lightProjection, lightView;
     glm::mat4 lightSpaceMatrix;
     float near_plane = 1.0f, far_plane = 35.0f;
     lightProjection = glm::ortho(-30.0f, 30.0f, -30.0f, 30.0f, near_plane, far_plane);
@@ -630,13 +632,11 @@ void Renderer::render()
 
     shadowShader->use();
     shadowShader->setInt("shadowMap", 2);
-    skinningShader->use();
-    skinningShader->setInt("shadowMap", 2);
-    shadowMap->bindShadowMap();
-    shadowShader->use();
     shadowShader->setInt("ssao", 3);
     skinningShader->use();
-    skinningShader->setInt("ssao", 3);
+    skinningShader->setInt("shadowMap", 2);
+    skinningShader->setInt("ssao", 3);    
+    shadowMap->bindShadowMap();
     glActiveTexture(GL_TEXTURE3); // add extra SSAO texture to lighting pass
     glBindTexture(GL_TEXTURE_2D, ssaoColorBufferBlur);
 
@@ -649,14 +649,14 @@ void Renderer::render()
     //crate->draw(*shadowShader);
     ground->draw(*shadowShader);
 
-    water->render();
+    water->render();*/
 
     /*debugShadow->use();
     debugShadow->setInt("depthMap", 0);
     debugShadow->setFloat("near_plane", near_plane);
     debugShadow->setFloat("far_plane", far_plane);
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, depthMap);
+    glBindTexture(GL_TEXTURE_2D, ssaoColorBufferBlur);
     unsigned int quadVAO = 0;
     unsigned int quadVBO;
     if (quadVAO == 0)
