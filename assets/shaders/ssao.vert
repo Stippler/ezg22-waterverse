@@ -12,7 +12,7 @@ uniform mat4 model;
 void main()
 {
     TexCoord = aTexCoord;
-    //FragPos = vec3(model * vec4(aPos, 1.0));
-    //Normal = mat3(transpose(inverse(model))) * aNorm;
+    FragPos = vec3(model * vec4(aPos, 1.0));
+    Normal = mat3(transpose(inverse(model))) * aNorm;
     gl_Position = vec4(aPos, 1.0);
 }

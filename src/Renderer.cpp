@@ -543,7 +543,7 @@ void Renderer::render()
     glBindTexture(GL_TEXTURE_2D, gNormal);
     glActiveTexture(GL_TEXTURE2);
     glBindTexture(GL_TEXTURE_2D, noiseTexture);
-    renderQuad();
+    //renderQuad();
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     glBindFramebuffer(GL_FRAMEBUFFER, ssaoBlurFBO);
@@ -551,7 +551,7 @@ void Renderer::render()
     shaderSSAOBlur->use();
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, ssaoColorBuffer);
-    renderQuad();
+    //renderQuad();
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 
