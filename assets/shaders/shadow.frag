@@ -12,7 +12,7 @@ uniform sampler2D texture_specular1;
 uniform sampler2D shadowMap;
 uniform sampler2D ssao;
 
-float AmbientOcclusion = texture(ssao, TexCoord).r;
+float AmbientOcclusion = texture(ssao, vec2(gl_FragCoord.x/800, gl_FragCoord.y/600)).r;
 
 struct DirLight {
     vec3 direction;
@@ -122,6 +122,6 @@ void main() {
     all_lights += CalcDirLight(light, norm, viewDir, shadow);
     // all_lights += CalcPointLight(plight, norm, FragPos, viewDir);
 
-    // 
     FragColor = vec4(all_lights, 1.0);
+    //FragColor = vec4(AmbientOcclusion, AmbientOcclusion, AmbientOcclusion, 1.0);
 }

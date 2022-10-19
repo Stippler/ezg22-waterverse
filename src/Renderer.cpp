@@ -190,6 +190,12 @@ void Renderer::init()
     skinningShader->setMaterial("material", coral);
     skinningShader->setVec3("viewPos", viewPos);
 
+    shaderLightingPass->use();
+    shaderLightingPass->setDirLight("light", light);
+    shaderLightingPass->setPointLight("plight", plight);
+    shaderLightingPass->setMaterial("material", coral);
+    shaderLightingPass->setVec3("viewPos", viewPos);
+
     // Shadow mapping
     shadowMap = new ShadowMap();
     shadowMap->init();
@@ -559,7 +565,7 @@ void Renderer::render()
 
     // 4. lighting pass: traditional deferred Blinn-Phong lighting with added screen-space ambient occlusion
     // -----------------------------------------------------------------------------------------------------
-    glm::vec3 lightPos = glm::vec3(2.0, 6.0, -2.0);
+    /*glm::vec3 lightPos = glm::vec3(2.0, 6.0, -2.0);
     glm::vec3 lightColor = glm::vec3(0.2, 0.2, 0.7);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     shaderLightingPass->use();
@@ -580,10 +586,10 @@ void Renderer::render()
     glBindTexture(GL_TEXTURE_2D, gAlbedo);
     glActiveTexture(GL_TEXTURE3); // add extra SSAO texture to lighting pass
     glBindTexture(GL_TEXTURE_2D, ssaoColorBufferBlur);
-    renderQuad();
+    renderQuad();*/
     
     // Render depth of scene to texture (from light's perspective)
-    /*glm::mat4 lightProjection, lightView;
+    glm::mat4 lightProjection, lightView;
     glm::mat4 lightSpaceMatrix;
     float near_plane = 1.0f, far_plane = 35.0f;
     lightProjection = glm::ortho(-30.0f, 30.0f, -30.0f, 30.0f, near_plane, far_plane);
@@ -649,7 +655,7 @@ void Renderer::render()
     //crate->draw(*shadowShader);
     ground->draw(*shadowShader);
 
-    water->render();*/
+    water->render();
 
     /*debugShadow->use();
     debugShadow->setInt("depthMap", 0);
