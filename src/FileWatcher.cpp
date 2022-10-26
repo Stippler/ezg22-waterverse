@@ -5,9 +5,11 @@
 #include <iostream>
 #include <filesystem>
 #include <exception>
+#include <mutex>
 
 std::mutex addShaderMutex{};
-std::jthread fileWatcher;
+std::thread fileWatcher;
+bool running=false;
 
 struct FileInfo
 {
@@ -27,11 +29,12 @@ struct FileInfo
 
 std::vector<FileInfo *> files;
 
-void watchFiles(std::stop_token stoken)
+void watchFiles()
 {
     auto delay = std::chrono::milliseconds(100);
 
-    while (!stoken.stop_requested())
+    // !stoken.stop_requested()
+    while (running)
     {
         std::this_thread::sleep_for(delay);
         addShaderMutex.lock();
@@ -51,12 +54,15 @@ void watchFiles(std::stop_token stoken)
 
 void FileWatcher::start()
 {
-    fileWatcher = std::jthread(watchFiles);
+    // fileWatcher = std::jthread(watchFiles);
+    fileWatcher = std::thread(watchFiles);
+    running = true;
 }
 
 void FileWatcher::stop()
 {
-    fileWatcher.request_stop();
+    // fileWatcher.request_stop();
+    running = false;
     fileWatcher.join();
 
     for (auto info : files)

@@ -11,9 +11,9 @@
 #include "Window.h"
 #include "Shader.h"
 #include "FileWatcher.h"
-#include "ModelLoader.h"
 #include "Cube.h"
 #include "Water.h"
+#include "Model.h"
 
 // Water
 Water *water;
