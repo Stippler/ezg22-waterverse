@@ -43,7 +43,9 @@ void ShadowMap::render()
 {
     if (reloadShader)
     {
+        std::cout << "Reload ShadowMap Shader" << std::endl;
         depthSkinning->reload();
+        reloadShader = false;
     }
 
     depthSkinning->use();

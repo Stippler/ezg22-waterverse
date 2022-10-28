@@ -17,7 +17,7 @@ class ShadowMap{
         unsigned int depthMap;
         unsigned int depthMapSkinning;
         
-        bool reloadShader;
+        bool reloadShader=false;
 
         Shader *depthSkinning;
 };

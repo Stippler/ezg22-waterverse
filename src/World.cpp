@@ -113,6 +113,8 @@ glm::mat4 World::getLightSpaceMatrix()
     lightProjection = glm::ortho(-30.0f, 30.0f, -30.0f, 30.0f, near_plane, far_plane);
     lightView = glm::lookAt(-10.0f * light->direction, glm::vec3(0.0f, -0.0f, 0.0f), glm::vec3(0.0, 1.0, 0.0));
     lightSpaceMatrix = lightProjection * lightView;
+
+    return lightSpaceMatrix;
 }
 
 std::vector<GameObject *> World::getAnimatedObjects()
