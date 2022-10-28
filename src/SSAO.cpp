@@ -36,6 +36,16 @@ SSAO::~SSAO()
 
 void SSAO::resize()
 {
+    static bool initialized=false;
+    if(initialized)
+    {
+        glDeleteFramebuffers(1, &ssaoFBO);
+        glDeleteFramebuffers(1, &ssaoBlurFBO);
+        glDeleteTextures(1, &ssaoColorBuffer);
+        glDeleteTextures(1, &ssaoColorBufferBlur);
+        glDeleteTextures(1, &noiseTexture);
+        initialized=true;
+    }
     glGenFramebuffers(1, &ssaoFBO);
     glGenFramebuffers(1, &ssaoBlurFBO);
     glBindFramebuffer(GL_FRAMEBUFFER, ssaoFBO);
@@ -103,6 +113,7 @@ void SSAO::render()
     glClear(GL_COLOR_BUFFER_BIT);
     shaderSSAO->use();
     Window::setMatrices(shaderSSAO);
+    Window::setScreenSize(shaderSSAO);
 
     // Send kernel + rotation
     for (unsigned int i = 0; i < 64; ++i)

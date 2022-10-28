@@ -30,6 +30,7 @@ GBuffer *gbuffer;
 SSAO *ssao;
 
 bool reloadShader = false;
+bool resizeViewport = false;
 
 unsigned int modelLoc, viewLoc, projectionLoc;
 
@@ -54,6 +55,7 @@ void Renderer::init()
 
     const char *vertexShader5 = "assets/shaders/skinning.vert";
     const char *fragmentShader5 = "assets/shaders/skinning.frag";
+
     skinningShader = new Shader(vertexShader5, fragmentShader5);
     FileWatcher::add(vertexShader5, []()
                      { reloadShader = true; });
@@ -85,6 +87,11 @@ void Renderer::init()
     StartTimeMillis = glfwGetTime() * 1000;
 }
 
+void Renderer::resize()
+{
+    resizeViewport = true;
+}
+
 void Renderer::free()
 {
     // Delete shaders
@@ -104,6 +111,12 @@ void Renderer::render()
 
         reloadShader = false;
     }
+    if (resizeViewport)
+    {
+        gbuffer->resize();
+        ssao->resize();
+        resizeViewport=false;
+    }
 
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -112,17 +125,13 @@ void Renderer::render()
     ssao->render();
     glEnable(GL_BLEND);
 
-    
     shadowMap->render();
-
-    // Reset viewport
-    glViewport(0, 0, Window::getWidth(), Window::getHeight());
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // Render scene normally
     // Skinning Shader
     skinningShader->use();
     Window::setMatrices(skinningShader);
+    Window::setScreenSize(skinningShader);
     skinningShader->setDirLight("light", World::getDirLight());
     skinningShader->setPointLight("plight", World::getPointLight());
     skinningShader->setMaterial("material", coral);

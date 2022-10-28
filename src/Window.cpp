@@ -1,4 +1,5 @@
 #include "Window.h"
+#include "Renderer.h"
 
 #include <GLFW/glfw3.h>
 #include <exception>
@@ -55,6 +56,7 @@ void framebufferSizeCallback(GLFWwindow *window, int newWidth, int newHeight)
     width=newWidth;
     height=newHeight;
     glViewport(0, 0, width, height);
+    Renderer::resize();
 }
 
 void Window::setMatrices(Shader *shader)

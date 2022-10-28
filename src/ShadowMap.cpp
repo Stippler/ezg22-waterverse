@@ -1,6 +1,7 @@
 #include "ShadowMap.h"
 #include "FileWatcher.h"
 #include "World.h"
+#include "Window.h"
 
 #include <glm/glm.hpp>
 
@@ -51,12 +52,17 @@ void ShadowMap::render()
     glViewport(0, 0, this->SHADOW_WIDTH, this->SHADOW_HEIGHT);
     glBindFramebuffer(GL_FRAMEBUFFER, this->depthMapFBO);
     glClear(GL_DEPTH_BUFFER_BIT);
+
     glEnable(GL_CULL_FACE);
     glCullFace(GL_FRONT);
     glDisable(GL_CULL_FACE);
     World::render(depthSkinning);
     glCullFace(GL_BACK);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    // Reset viewport
+    glViewport(0, 0, Window::getWidth(), Window::getHeight());
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
 void ShadowMap::bindShadowMap()

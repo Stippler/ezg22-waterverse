@@ -52,7 +52,9 @@ struct Material {
 
 uniform Material material;
 
-float AmbientOcclusion = texture(ssao, vec2((gl_FragCoord.x-0.5)/800, (gl_FragCoord.y-0.5)/600)).r;
+uniform vec2 screenSize;
+
+float AmbientOcclusion = texture(ssao, vec2(gl_FragCoord.x-0.5, gl_FragCoord.y-0.5)/screenSize).r;
 
 vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir, float shadow) {
     vec3 lightDir = normalize(-light.direction);

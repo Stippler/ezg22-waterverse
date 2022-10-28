@@ -31,6 +31,16 @@ GBuffer::~GBuffer()
 
 void GBuffer::resize()
 {
+    static bool initialized=false;
+    if(initialized)
+    {
+        glDeleteFramebuffers(1, &gBuffer);
+        glDeleteTextures(1, &gBuffer);
+        glDeleteTextures(1, &gNormal);
+        glDeleteTextures(1, &gAlbedo);
+        glDeleteRenderbuffers(1, &rboDepth);
+        initialized=true;
+    }
     float width = Window::getWidth();
     float height = Window::getHeight();
     std::cout << "Resizing GBuffer with: {" << width << ", " << height << "}" << std::endl;
