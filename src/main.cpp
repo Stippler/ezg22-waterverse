@@ -51,8 +51,8 @@ int main(const int argc, const char **argv)
     }
     
     FileWatcher::start();
-    Renderer::init();
     World::init();
+    Renderer::init();
 
     auto lastFrame = std::chrono::system_clock::now();
     // Some computation here

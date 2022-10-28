@@ -2,6 +2,7 @@
 #include "AnimatedModel.h"
 #include "Window.h"
 
+#include <glm/glm.hpp>
 #include <assert.h>
 #include <unordered_map>
 
@@ -11,11 +12,17 @@ std::vector<GameObject *> staticObjects;
 std::unordered_map<std::string, AnimatedModel *> animatedModelMap;
 std::unordered_map<std::string, AnimatedModel *> staticModelMap;
 
+DirLight *light;
+PointLight *plight;
+
 // std::vector<AnimatedModel *> models;
 // std::vector<Cube*> cubes;
 
 void World::init()
 {
+    light = new DirLight(glm::vec3(1.0f, -1.0f, 0.0f), glm::vec3(0.2f, 0.2f, 0.2f), glm::vec3(0.5f, 0.5f, 0.5f), glm::vec3(1.0f, 1.0f, 1.0f));
+    plight = new PointLight(glm::vec3(-0.5f, -2.2f, -2.5f), glm::vec3(0.2f, 0.2f, 0.2f), glm::vec3(0.5f, 0.5f, 0.5f), glm::vec3(1.0f, 1.0f, 1.0f), 1.0, 0.7, 1.8);
+
     animatedModelMap.emplace("whiteshark", new AnimatedModel("assets/models/whiteshark/WhiteShark.gltf"));
     animatedModelMap.emplace("fish", new AnimatedModel("assets/models/guppy-fish/Guppy.gltf"));
     staticModelMap.emplace("crate", new AnimatedModel("assets/models/Crate/Crate1.obj"));
@@ -96,6 +103,18 @@ void World::free()
     }
 }
 
+glm::mat4 World::getLightSpaceMatrix()
+{
+    // Render depth of scene to texture (from light's perspective)
+    glm::mat4 lightProjection, lightView;
+    glm::mat4 lightSpaceMatrix;
+
+    float near_plane = 1.0f, far_plane = 35.0f;
+    lightProjection = glm::ortho(-30.0f, 30.0f, -30.0f, 30.0f, near_plane, far_plane);
+    lightView = glm::lookAt(-10.0f * light->direction, glm::vec3(0.0f, -0.0f, 0.0f), glm::vec3(0.0, 1.0, 0.0));
+    lightSpaceMatrix = lightProjection * lightView;
+}
+
 std::vector<GameObject *> World::getAnimatedObjects()
 {
     return animatedObjects;
@@ -104,4 +123,14 @@ std::vector<GameObject *> World::getAnimatedObjects()
 std::vector<GameObject *> World::getStaticObjects()
 {
     return staticObjects;
+}
+
+DirLight *World::getDirLight()
+{
+    return light;
+}
+
+PointLight *World::getPointLight()
+{
+    return plight;
 }

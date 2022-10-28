@@ -8,9 +8,7 @@
 class ShadowMap{
     public:
         ShadowMap(unsigned int textureDimension = 1024);
-        void init();
-        void renderActivate();
-        void renderDeactivate();
+        void render();
         void bindShadowMap();
         
     private:
@@ -18,4 +16,8 @@ class ShadowMap{
         unsigned int SHADOW_WIDTH, SHADOW_HEIGHT;
         unsigned int depthMap;
         unsigned int depthMapSkinning;
+        
+        bool reloadShader;
+
+        Shader *depthSkinning;
 };

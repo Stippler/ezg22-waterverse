@@ -15,6 +15,11 @@ namespace World
     void update(float tslf);
     void render(Shader *shader);
 
+    glm::mat4 getLightSpaceMatrix();
+
     std::vector<GameObject*> getAnimatedObjects();
     std::vector<GameObject*> getStaticObjects();
+
+    PointLight *getPointLight();
+    DirLight *getDirLight();
 }
