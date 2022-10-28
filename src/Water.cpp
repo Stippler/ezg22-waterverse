@@ -150,7 +150,7 @@ void Water::render()
 
     static int ledl = 0;
 
-    if(ledl%1000==0) {
+    if(ledl%100==0) {
         addDrop(glm::vec2(0.5, 0), 0.1, 3);
         addDrop(glm::vec2(-0.5, 0), 0.1, 3);
     }

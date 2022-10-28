@@ -66,7 +66,13 @@ void Window::setMatrices(Shader *shader)
     shader->setMat4("projection", proj);
     shader->setMat4("view", viewMatrix);
     shader->setVec3("viewPos", viewPos);
-    shader->setMat4("model", glm::mat4(1.0f));
+    // shader->setMat4("model", glm::mat4(1.0f));
+}
+
+void Window::setScreenSize(Shader *shader)
+{
+    glm::vec2 screenSize(width, height);
+    shader->setVec2("screenSize", screenSize);
 }
 
 void Window::processInput()

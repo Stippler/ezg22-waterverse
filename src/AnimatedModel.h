@@ -2,7 +2,9 @@
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+
 #include "stb_image.h"
+
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
@@ -86,7 +88,7 @@ public:
     aiMatrix4x4 m_GlobalInverseTransform;
 
     // constructor, expects a filepath to a 3D model.
-    AnimatedModel(std::string const &path, glm::vec3 position=glm::vec3(0.f, 0.f, 0.f), bool gamma = false);
+    AnimatedModel(std::string const &path, bool gamma = false);
 
     void reload();
 
@@ -103,12 +105,12 @@ public:
     void ReadNodeHierarchy(float AnimationTimeTicks, aiNode* pNode, const aiMatrix4x4 ParentTransform);
     void getBoneTransforms(float TimeInSeconds, vector<aiMatrix4x4>& Transforms);
 
-    void setAnimationModel(glm::mat4 model);
+    // void setAnimationModel(glm::mat4 model);
 
 private:
     std::string const &path;
-    glm::mat4 model = glm::mat4(1.0f);
-    glm::mat4 baseModel = glm::mat4(1.0f);
+    // glm::mat4 model = glm::mat4(1.0f);
+    // glm::mat4 baseModel = glm::mat4(1.0f);
 
     // loads a model with supported ASSIMP extensions from file and stores the resulting meshes in the meshes vector.
     void loadModel(std::string const &path);

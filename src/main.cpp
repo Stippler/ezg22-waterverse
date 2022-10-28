@@ -15,19 +15,23 @@
 
 #include <filesystem>
 
+#include <chrono>
+
 #ifdef _WIN32
 #include <Windows.h>
 #else
 #include <unistd.h>
 #endif
 
-#include "FileWatcher.h"
-#include "Model.h"
+// #include "Model.h"
+// #include "AnimatedModel.h"
 
+#include "FileWatcher.h"
 #include "Camera.h"
 #include "Shader.h"
 
 #include "Renderer.h"
+#include "World.h"
 
 void loadShader();
 
@@ -48,15 +52,24 @@ int main(const int argc, const char **argv)
     
     FileWatcher::start();
     Renderer::init();
+    World::init();
 
-    glEnable(GL_DEPTH_TEST);
+    auto lastFrame = std::chrono::system_clock::now();
+    // Some computation here
 
     // render loop
     while (!Window::shouldClose())
     {
+        auto thisFrame = std::chrono::system_clock::now();
+        std::chrono::duration<double> elapsed_seconds = thisFrame-lastFrame;
+        lastFrame = thisFrame;
+
+        float tslf = static_cast<float>(elapsed_seconds.count());
+
+        World::update(tslf);
+
         // input
         Window::processInput();
-
         Renderer::render();
 
         // check and call events and swap the buffersprocessInput(window);
@@ -64,6 +77,7 @@ int main(const int argc, const char **argv)
         //sleep(1/120.0);
     }
 
+    World::free();
     Renderer::free();
     FileWatcher::stop();
 

@@ -113,6 +113,7 @@ void main()
     vec3 lighting = vec3(0, 0, 0);
     lighting += CalcDirLight(light, norm, viewDir, 1.0f);
 
-    FragColor = vec4(lighting, 1.0);
-    //FragColor = vec4(AmbientOcclusion, AmbientOcclusion, AmbientOcclusion, 1.0);
+    //FragColor = vec4(lighting, 1.0);
+    FragColor = vec4(norm, 1.0);
+    // FragColor = vec4(norm.x, norm.y, norm.z, 1.0);
 }

@@ -105,6 +105,13 @@ void Shader::setMat4(const GLchar *name, glm::mat4 matrix)
     glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(matrix));
 }
 
+
+void Shader::setVec2(const GLchar *name, glm::vec2 &vector)
+{
+    unsigned int projectionLoc = glGetUniformLocation(ID, name);
+    glUniform2fv(projectionLoc, 1, &vector[0]);
+}
+
 void Shader::setVec3(const GLchar *name, glm::vec3 &vector)
 {
     unsigned int projectionLoc = glGetUniformLocation(ID, name);

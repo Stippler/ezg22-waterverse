@@ -3,11 +3,9 @@
 
 #define MAX_NUM_BONES_PER_VERTEX 4
 
-AnimatedModel::AnimatedModel(string const& path, glm::vec3 position, bool gamma) : path(path), gammaCorrection(gamma)
+AnimatedModel::AnimatedModel(std::string const& path, bool gamma) : path(path), gammaCorrection(gamma)
 {
     loadModel(path);
-    model = glm::translate(model, position);
-    baseModel = glm::translate(model, position);
 }
 
 void AnimatedModel::reload()
@@ -17,12 +15,10 @@ void AnimatedModel::reload()
 
 void AnimatedModel::draw(Shader &shader)
 {
-    shader.use();
-	int modelLoc = glGetUniformLocation(shader.ID, "model");
-    shader.setMat4("model", model);
-
     for (unsigned int i = 0; i < meshes.size(); i++)
+    {
         meshes[i].draw(shader);
+    }
 }
 
 const aiNodeAnim* AnimatedModel::FindNodeAnim(const aiAnimation* pAnimation, const string NodeName) 
@@ -143,9 +139,9 @@ void AnimatedModel::CalcInterpolatedPosition(aiVector3D& Out, float AnimationTim
     Out = Start + Factor * Delta;
 }
 
-void AnimatedModel::setAnimationModel(glm::mat4 model){
-    this->model = this->baseModel*model;
-}
+// void AnimatedModel::setAnimationModel(glm::mat4 model){
+//     this->model = this->baseModel*model;
+// }
 
 void AnimatedModel::ReadNodeHierarchy(float AnimationTimeTicks, aiNode* pNode, const aiMatrix4x4 ParentTransform) 
 {

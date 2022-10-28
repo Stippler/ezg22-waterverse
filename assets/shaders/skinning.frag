@@ -6,13 +6,17 @@ in vec3 Normal;
 in vec3 FragPos;
 in vec2 TexCoord;
 in vec4 FragPosLightSpace;
-flat in ivec4 Bones;
-in vec4 W;
+// flat in ivec4 Bones;
+// in vec4 W;
 
 uniform sampler2D texture_diffuse1;
 uniform sampler2D texture_specular1;
 uniform sampler2D shadowMap;
 uniform sampler2D ssao;
+
+uniform sampler2D gPosition;
+uniform sampler2D gNormal;
+uniform sampler2D gAlbedo;
 
 struct DirLight {
     vec3 direction;
@@ -48,7 +52,7 @@ struct Material {
 
 uniform Material material;
 
-float AmbientOcclusion = texture(ssao, vec2(gl_FragCoord.x/800, gl_FragCoord.y/600)).r;
+float AmbientOcclusion = texture(ssao, vec2((gl_FragCoord.x-0.5)/800, (gl_FragCoord.y-0.5)/600)).r;
 
 vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir, float shadow) {
     vec3 lightDir = normalize(-light.direction);
@@ -155,5 +159,8 @@ void main() {
     
     
     FragColor = vec4(all_lights, 1.0);
-    //FragColor = vec4(AmbientOcclusion, AmbientOcclusion, AmbientOcclusion, 1.0);
+    // vec2 uv = vec2((gl_FragCoord.x-0.5)/800, (gl_FragCoord.y-0.5)/600);
+    // vec3 ledl = normalize(texture(gNormal, uv).rgb);
+    // FragColor = vec4(ledl, 1.0);
+    // FragColor = vec4(AmbientOcclusion, AmbientOcclusion, AmbientOcclusion, 1.0);
 }
