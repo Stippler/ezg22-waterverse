@@ -14,7 +14,9 @@ public:
     ~GameObject();
 
     glm::vec3 pos = glm::vec3(0.0f);
+    float scale = 1.0f;
 
+    glm::vec3 velocity = glm::vec3(0.0f, 0.0f, 0.0f);
     float time = 0.0f;
 
     void render(Shader *shader);

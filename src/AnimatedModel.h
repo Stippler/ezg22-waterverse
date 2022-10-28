@@ -76,6 +76,8 @@ public:
     std::string directory;
     bool gammaCorrection;
 
+    float defaultYaw=0.0f;
+
     vector<VertexBoneData> m_Bones;
     vector<int> mesh_base_vertex;
     map<string, int> bone_name_to_index_map;
@@ -88,7 +90,7 @@ public:
     aiMatrix4x4 m_GlobalInverseTransform;
 
     // constructor, expects a filepath to a 3D model.
-    AnimatedModel(std::string const &path, bool gamma = false);
+    AnimatedModel(std::string const &path, float defaultYaw=0.0f, bool gamma = false);
 
     void reload();
 

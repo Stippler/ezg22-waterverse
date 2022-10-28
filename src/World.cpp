@@ -23,15 +23,28 @@ void World::init()
     light = new DirLight(glm::vec3(1.0f, -1.0f, 0.0f), glm::vec3(0.2f, 0.2f, 0.2f), glm::vec3(0.5f, 0.5f, 0.5f), glm::vec3(1.0f, 1.0f, 1.0f));
     plight = new PointLight(glm::vec3(-0.5f, -2.2f, -2.5f), glm::vec3(0.2f, 0.2f, 0.2f), glm::vec3(0.5f, 0.5f, 0.5f), glm::vec3(1.0f, 1.0f, 1.0f), 1.0, 0.7, 1.8);
 
-    animatedModelMap.emplace("whiteshark", new AnimatedModel("assets/models/whiteshark/WhiteShark.gltf"));
-    animatedModelMap.emplace("fish", new AnimatedModel("assets/models/guppy-fish/Guppy.gltf"));
+    animatedModelMap.emplace("whiteshark", new AnimatedModel("assets/models/whiteshark/WhiteShark.gltf", -M_PI/2));
+    animatedModelMap.emplace("fish", new AnimatedModel("assets/models/guppy-fish/Guppy.gltf", M_PI/2));
     staticModelMap.emplace("crate", new AnimatedModel("assets/models/Crate/Crate1.obj"));
     staticModelMap.emplace("ground", new AnimatedModel("assets/models/floor/floor.obj"));
 
-    World::addGameObject("whiteshark", glm::vec3(0, -8, 0));
-    World::addGameObject("fish", glm::vec3(2, -4, 0));
-    World::addGameObject("fish", glm::vec3(0, -4, 0));
-    World::addGameObject("fish", glm::vec3(-2, -4, 0));
+    auto go = World::addGameObject("whiteshark", glm::vec3(0, -8, 0));
+    go->velocity = glm::vec3(0.1f, 0.1f, 0);
+
+    float gridSize = 10;
+
+    for (int i = 0; i < 20; i++)
+    {
+        float x = static_cast<float>(rand()) / static_cast<float>(RAND_MAX) - 0.5;
+        float y = static_cast<float>(rand()) / static_cast<float>(RAND_MAX) - 0.5;
+        float z = static_cast<float>(rand()) / static_cast<float>(RAND_MAX) - 0.5;
+
+        go = World::addGameObject("fish", glm::vec3(x * gridSize, y * gridSize, z * gridSize), 0.1f);
+        go->velocity=glm::vec3(0.1f, 0.1f, 0.0f);
+    }
+    // World::addGameObject("fish", glm::vec3(0, -4, 0), 0.1f);
+    // World::addGameObject("fish", glm::vec3(-2, -4, 0), 0.1f);
+
     World::addGameObject("ground", glm::vec3(0, -15, 0));
     World::addGameObject("crate", glm::vec3(0, 5, 0));
 }
@@ -56,16 +69,18 @@ void World::update(float tslf)
 {
     for (auto ao : animatedObjects)
     {
+        ao->pos += ao->velocity*tslf;
         ao->time += tslf;
     }
 }
 
-GameObject *World::addGameObject(std::string model, glm::vec3 pos)
+GameObject *World::addGameObject(std::string model, glm::vec3 pos, float scale)
 {
     if (staticModelMap.find(model) != staticModelMap.end())
     {
         GameObject *gameObject = new GameObject(staticModelMap.at(model), false);
         gameObject->pos = pos;
+        gameObject->scale = scale;
         staticObjects.push_back(gameObject);
         return gameObject;
     }
@@ -73,6 +88,7 @@ GameObject *World::addGameObject(std::string model, glm::vec3 pos)
     {
         GameObject *gameObject = new GameObject(animatedModelMap.at(model), true);
         gameObject->pos = pos;
+        gameObject->scale = scale;
         animatedObjects.push_back(gameObject);
         return gameObject;
     }

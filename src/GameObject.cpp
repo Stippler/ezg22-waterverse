@@ -3,27 +3,45 @@
 #include "Shader.h"
 
 #define MAX_BONES 100
-    
 
 GameObject::GameObject(AnimatedModel *model, bool animated) : model(model), animated(animated)
-{}
-
+{
+}
 
 GameObject::~GameObject()
-{}
-
+{
+}
 
 void GameObject::render(Shader *shader)
 {
     glm::mat4 modelMatrix(1.0f);
+    float vel_length = glm::length(velocity);
+    if (abs(vel_length) > 0.00000001)
+    {
+        float pitch = asin(velocity.y / vel_length);
+        float yaw = 0; // Beware cos(pitch)==0, catch this exception!
+        if (cos(pitch) != 0)
+        {
+            yaw = asin(velocity.x / (cos(pitch) * length(velocity)));
+        }
+        float roll = 0;
+        std::cout << "yaw:   " << yaw << std::endl;
+        std::cout << "pitch: " << pitch << std::endl;
+        modelMatrix = glm::rotate(modelMatrix, pitch, glm::vec3(1.0f, 0.0f, 0.0f));
+        modelMatrix = glm::rotate(modelMatrix, yaw, glm::vec3(0.0f, 1.0f, 0.0f));
+    }
+    modelMatrix = glm::rotate(modelMatrix, model->defaultYaw, glm::vec3(0, 1.0f, 0.0f));
     modelMatrix = glm::translate(modelMatrix, pos);
+    modelMatrix = glm::scale(modelMatrix, glm::vec3(scale));
     shader->setMat4("model", modelMatrix);
 
-    if(animated){
+    if (animated)
+    {
         vector<aiMatrix4x4> transforms;
         glm::mat4 transform[MAX_BONES] = {};
         model->getBoneTransforms(time, transforms);
-        for (int i = 0; i < transforms.size(); i++) {
+        for (int i = 0; i < transforms.size(); i++)
+        {
             glm::mat4 t = glm::mat4(1.0f);
             t[0][0] = transforms[i][0][0];
             t[0][1] = transforms[i][0][1];
