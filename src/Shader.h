@@ -12,6 +12,7 @@
 #include "DirLight.h"
 #include "PointLight.h"
 #include "Material.h"
+#include <vector>
 
 // Add Filewatcher and reload shader on change
 class Shader
@@ -45,7 +46,7 @@ public:
 
     void setDirLight(const GLchar *name, DirLight *light);
 
-    void setPointLight(const GLchar *name, PointLight *plight);
+    void setPointLight(const GLchar *name, std::vector<PointLight *> plight);
 
     void setMaterial(const GLchar *name, Material *material);
 

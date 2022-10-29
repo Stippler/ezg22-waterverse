@@ -20,6 +20,6 @@ namespace World
     std::vector<GameObject*> getAnimatedObjects();
     std::vector<GameObject*> getStaticObjects();
 
-    PointLight *getPointLight();
+    std::vector<PointLight *> getPointLight();
     DirLight *getDirLight();
 }

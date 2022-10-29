@@ -1,5 +1,6 @@
 #include "Shader.h"
 #include <exception>
+#include <vector>
 
 Shader::Shader(const char *vertexPath, const char *fragmentPath) : vertexPath(vertexPath), fragmentPath(fragmentPath)
 {
@@ -141,30 +142,33 @@ void Shader::setDirLight(const GLchar *name, DirLight *light){
     this->setVec3(res.c_str(), light->direction);
 }
 
-void Shader::setPointLight(const GLchar *name, PointLight *plight){
+void Shader::setPointLight(const GLchar *name, std::vector<PointLight *> plight){
     // TODO fix:
-    std::string prefix = std::string(name);
-    std::string suffix = std::string(".ambient");
-    std::string res = prefix+suffix;
-    this->setVec3(res.c_str(), plight->ambient);
-    suffix = std::string(".diffuse");
-    res = (prefix + suffix);
-    this->setVec3(res.c_str(), plight->diffuse);
-    suffix = std::string(".specular");
-    res = (prefix + suffix);
-    this->setVec3(res.c_str(), plight->specular);
-    suffix = std::string(".position");
-    res = (prefix + suffix);
-    this->setVec3(res.c_str(), plight->position);
-    suffix = std::string(".constant");
-    res = (prefix + suffix);
-    this->setFloat(res.c_str(), plight->constant);
-    suffix = std::string(".linear");
-    res = (prefix + suffix);
-    this->setFloat(res.c_str(), plight->linear);
-    suffix = std::string(".quadratic");
-    res = (prefix + suffix);
-    this->setFloat(res.c_str(), plight->quadratic);
+    for(int i=0; i<plight.size(); i++){
+        std::string prefix = std::string(name)+std::string("[")+std::to_string(i)+std::string("]");
+        std::string suffix = std::string(".ambient");
+        std::string res = prefix+suffix;
+        this->setVec3(res.c_str(), plight[i]->ambient);
+        suffix = std::string(".diffuse");
+        res = (prefix + suffix);
+        this->setVec3(res.c_str(), plight[i]->diffuse);
+        suffix = std::string(".specular");
+        res = (prefix + suffix);
+        this->setVec3(res.c_str(), plight[i]->specular);
+        suffix = std::string(".position");
+        res = (prefix + suffix);
+        this->setVec3(res.c_str(), plight[i]->position);
+        suffix = std::string(".constant");
+        res = (prefix + suffix);
+        this->setFloat(res.c_str(), plight[i]->constant);
+        suffix = std::string(".linear");
+        res = (prefix + suffix);
+        this->setFloat(res.c_str(), plight[i]->linear);
+        suffix = std::string(".quadratic");
+        res = (prefix + suffix);
+        this->setFloat(res.c_str(), plight[i]->quadratic);
+    }
+    
 }
 
 void Shader::setMaterial(const GLchar *name, Material *material){

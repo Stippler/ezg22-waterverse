@@ -8,6 +8,7 @@ in vec2 TexCoord;
 in vec4 FragPosLightSpace;
 // flat in ivec4 Bones;
 // in vec4 W;
+#define NR_POINT_LIGHTS 3  
 
 uniform sampler2D texture_diffuse1;
 uniform sampler2D texture_specular1;
@@ -39,7 +40,8 @@ struct PointLight {
 };
 
 uniform DirLight light;
-uniform PointLight plight;
+//uniform PointLight plight;
+uniform PointLight plight[NR_POINT_LIGHTS];
 
 uniform vec3 viewPos;
 
@@ -128,6 +130,9 @@ void main() {
     float shadow = ShadowCalculation(FragPosLightSpace, norm);
     vec3 all_lights = vec3(0, 0, 0);
     all_lights += CalcDirLight(light, norm, viewDir, shadow);
+    for(int i = 0; i<NR_POINT_LIGHTS; i++){
+        all_lights += CalcPointLight(plight[i], norm, FragPos, viewDir);
+    }
     // all_lights += CalcPointLight(plight, norm, FragPos, viewDir);
 
     //Debug vertex skinning
