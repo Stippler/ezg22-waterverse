@@ -23,6 +23,7 @@
 #include "GBuffer.h"
 #include "SSAO.h"
 #include "World.h"
+#include "CubeMap.h"
 
 // Water
 Water *water;
@@ -39,6 +40,7 @@ Shader *skinningShader;
 
 // Shadow predefines
 ShadowMap *shadowMap;
+CubeMap *cubeMap;
 
 // lights predefines
 Material *coral;
@@ -50,7 +52,6 @@ long long StartTimeMillis = 0;
 void Renderer::init()
 {
     glEnable(GL_DEPTH_TEST);
-
     water = new Water();
 
     const char *vertexShader5 = "assets/shaders/skinning.vert";
@@ -62,6 +63,7 @@ void Renderer::init()
     FileWatcher::add(fragmentShader5, []()
                      { reloadShader = true; });
 
+    std::cout <<"hello"<<std::endl;
     
     // Initialise lights
     
@@ -75,6 +77,7 @@ void Renderer::init()
     skinningShader->setVec3("viewPos", viewPos);
 
     shadowMap = new ShadowMap();
+    cubeMap = new CubeMap(World::getPointLight()[0]->position);
     gbuffer = new GBuffer();
     ssao = new SSAO(gbuffer);
     
@@ -126,6 +129,7 @@ void Renderer::render()
     glEnable(GL_BLEND);
 
     shadowMap->render();
+    cubeMap->render();
 
     // Render scene normally
     // Skinning Shader
@@ -141,6 +145,8 @@ void Renderer::render()
     skinningShader->setInt("gPosition", 4);
     skinningShader->setInt("gNormal", 5);
     skinningShader->setInt("gAlbedo", 6);
+    skinningShader->setInt("cubeShadowMap", 7);
+    //set cubemap int
 
     // ssaoColorBufferBlur
     shadowMap->bindShadowMap();
@@ -152,6 +158,9 @@ void Renderer::render()
     glBindTexture(GL_TEXTURE_2D, gbuffer->gNormal);
     glActiveTexture(GL_TEXTURE6); 
     glBindTexture(GL_TEXTURE_2D, gbuffer->gAlbedo);
+    glActiveTexture(GL_TEXTURE7); 
+    glBindTexture(GL_TEXTURE_CUBE_MAP, cubeMap->depthCubeMap);
+    //bind cube map
     World::render(skinningShader);
 
     water->render();

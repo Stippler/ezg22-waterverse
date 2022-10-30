@@ -9,3 +9,7 @@ PointLight::PointLight(glm::vec3 position, glm::vec3 ambient, glm::vec3 diffuse,
         this->linear = linear;
         this->quadratic = quadratic;
 }
+
+glm::vec3 PointLight::getPos(){
+        return this->position;
+}

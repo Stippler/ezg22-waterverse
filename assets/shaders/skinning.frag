@@ -8,7 +8,7 @@ in vec2 TexCoord;
 in vec4 FragPosLightSpace;
 // flat in ivec4 Bones;
 // in vec4 W;
-#define NR_POINT_LIGHTS 3  
+#define NR_POINT_LIGHTS 1  
 
 uniform sampler2D texture_diffuse1;
 uniform sampler2D texture_specular1;
@@ -18,6 +18,8 @@ uniform sampler2D ssao;
 uniform sampler2D gPosition;
 uniform sampler2D gNormal;
 uniform sampler2D gAlbedo;
+uniform samplerCube cubeShadowMap;
+
 
 struct DirLight {
     vec3 direction;
@@ -42,6 +44,7 @@ struct PointLight {
 uniform DirLight light;
 //uniform PointLight plight;
 uniform PointLight plight[NR_POINT_LIGHTS];
+float far_plane = 25.0;
 
 uniform vec3 viewPos;
 
@@ -76,7 +79,7 @@ vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir, float shadow) {
     return res; // (ambient + (1.0 - shadow) * diffuse + specular);
 }
 
-vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir) {
+vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir, float shadow) {
     vec3 lightDir = normalize(light.position - fragPos);
     // diffuse shading
     float diff = max(dot(normal, lightDir), 0.0);
@@ -94,7 +97,7 @@ vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir) {
     ambient *= attenuation;
     diffuse *= attenuation;
     specular *= attenuation;
-    return (ambient + diffuse + specular);
+    return (ambient + (1.0-shadow)*(diffuse + specular));
 }
 
 float ShadowCalculation(vec4 fragPosLightSpace, vec3 norm) {
@@ -122,6 +125,37 @@ float ShadowCalculation(vec4 fragPosLightSpace, vec3 norm) {
     return shadow;
 }
 
+// array of offset direction for sampling
+vec3 gridSamplingDisk[20] = vec3[]
+(
+   vec3(1, 1,  1), vec3( 1, -1,  1), vec3(-1, -1,  1), vec3(-1, 1,  1), 
+   vec3(1, 1, -1), vec3( 1, -1, -1), vec3(-1, -1, -1), vec3(-1, 1, -1),
+   vec3(1, 1,  0), vec3( 1, -1,  0), vec3(-1, -1,  0), vec3(-1, 1,  0),
+   vec3(1, 0,  1), vec3(-1,  0,  1), vec3( 1,  0, -1), vec3(-1, 0, -1),
+   vec3(0, 1,  1), vec3( 0, -1,  1), vec3( 0, -1, -1), vec3( 0, 1, -1)
+);
+
+float ShadowCalculationPointLight(vec3 fragPos, PointLight light)
+{
+    // get vector between fragment position and light position
+    vec3 fragToLight = fragPos - light.position;
+    float currentDepth = length(fragToLight);
+    float shadow = 0.0;
+    float bias = 0.15;
+    int samples = 20;
+    float viewDistance = length(viewPos - fragPos);
+    float diskRadius = (1.0 + (viewDistance / far_plane)) / 25.0;
+    for(int i = 0; i < samples; ++i)
+    {
+        float closestDepth = texture(cubeShadowMap, fragToLight + gridSamplingDisk[i] * diskRadius).r;
+        closestDepth *= far_plane;   // undo mapping [0;1]
+        if(currentDepth - bias > closestDepth)
+            shadow += 1.0;
+    }
+    shadow /= float(samples);  
+    return shadow;
+}  
+
 void main() {
     vec3 ambient = light.ambient * material.ambient;
 
@@ -131,7 +165,8 @@ void main() {
     vec3 all_lights = vec3(0, 0, 0);
     all_lights += CalcDirLight(light, norm, viewDir, shadow);
     for(int i = 0; i<NR_POINT_LIGHTS; i++){
-        all_lights += CalcPointLight(plight[i], norm, FragPos, viewDir);
+        float shadowpl = ShadowCalculationPointLight(FragPos, plight[i]);
+        all_lights += CalcPointLight(plight[i], norm, FragPos, viewDir, shadowpl);
     }
     // all_lights += CalcPointLight(plight, norm, FragPos, viewDir);
 

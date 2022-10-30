@@ -22,7 +22,7 @@ public:
 
     // constructor generates the shader on the fly
     // ------------------------------------------------------------------------
-    Shader(const char *vertexPath, const char *fragmentPath);
+    Shader(const char *vertexPath, const char *fragmentPath, const char *geometryPath = nullptr);
 
     bool reload();
     // activate the shader
@@ -54,6 +54,7 @@ private:
 
     const char *vertexPath;
     const char *fragmentPath;
+    const char *geometryPath;
     // utility function for checking shader compilation/linking errors.
     // ------------------------------------------------------------------------
     bool checkCompileErrors(unsigned int shader, std::string type);
