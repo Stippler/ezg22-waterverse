@@ -3,7 +3,7 @@
 
 #define MAX_NUM_BONES_PER_VERTEX 4
 
-AnimatedModel::AnimatedModel(std::string const &path, float defaultYaw, bool gamma) : path(path), defaultYaw(defaultYaw), gammaCorrection(gamma)
+AnimatedModel::AnimatedModel(std::string const &path, glm::vec3 axis, bool gamma) : path(path), axis(axis), gammaCorrection(gamma)
 {
     loadModel(path);
 }

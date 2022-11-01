@@ -16,27 +16,29 @@ std::unordered_map<std::string, AnimatedModel *> staticModelMap;
 DirLight *light;
 std::vector<PointLight *> plights;
 
+std::vector<GameObject *> swarm;
+
 // std::vector<AnimatedModel *> models;
 // std::vector<Cube*> cubes;
 
 void World::init()
 {
     light = new DirLight(glm::vec3(1.0f, -1.0f, 0.0f), glm::vec3(0.2f, 0.2f, 0.2f), glm::vec3(0.5f, 0.5f, 0.5f), glm::vec3(1.0f, 1.0f, 1.0f));
-    //light = new DirLight(glm::vec3(1.0f, -1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f));
+    // light = new DirLight(glm::vec3(1.0f, -1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f));
     plights.push_back(new PointLight(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.2f, 0.2f, 0.2f), glm::vec3(0.5f, 0.5f, 0.5f), glm::vec3(1.0f, 1.0f, 1.0f), 1.0, 0.5, 1.0));
-    //plights.push_back(new PointLight(glm::vec3(3.0f, -8.0f, 0.0f), glm::vec3(0.2f, 0.2f, 0.2f), glm::vec3(0.5f, 0.5f, 0.5f), glm::vec3(1.0f, 1.0f, 1.0f), 1.0, 0.5, 1.0));
-    //plights.push_back(new PointLight(glm::vec3(2.0f, -4.0f, 0.0f), glm::vec3(0.2f, 0.2f, 0.2f), glm::vec3(0.5f, 0.5f, 0.5f), glm::vec3(1.0f, 1.0f, 1.0f), 1.0, 0.5, 1.0));
+    // plights.push_back(new PointLight(glm::vec3(3.0f, -8.0f, 0.0f), glm::vec3(0.2f, 0.2f, 0.2f), glm::vec3(0.5f, 0.5f, 0.5f), glm::vec3(1.0f, 1.0f, 1.0f), 1.0, 0.5, 1.0));
+    // plights.push_back(new PointLight(glm::vec3(2.0f, -4.0f, 0.0f), glm::vec3(0.2f, 0.2f, 0.2f), glm::vec3(0.5f, 0.5f, 0.5f), glm::vec3(1.0f, 1.0f, 1.0f), 1.0, 0.5, 1.0));
 
-    animatedModelMap.emplace("whiteshark", new AnimatedModel("assets/models/whiteshark/WhiteShark.gltf"));
-    animatedModelMap.emplace("fish", new AnimatedModel("assets/models/guppy-fish/Guppy.gltf", M_PI));
+    animatedModelMap.emplace("whiteshark", new AnimatedModel("assets/models/whiteshark/WhiteShark.gltf", glm::vec3(0, 0, 1.0f)));
+    animatedModelMap.emplace("fish", new AnimatedModel("assets/models/guppy-fish/Guppy.gltf", glm::vec3(0, 0, -1.0f)));
     staticModelMap.emplace("crate", new AnimatedModel("assets/models/Crate/Crate1.obj"));
     staticModelMap.emplace("ground", new AnimatedModel("assets/models/floor/floor.obj"));
 
     auto go = World::addGameObject("whiteshark", glm::vec3(0, -8, 0));
-    go->velocity = glm::vec3(0.5f, 0.5f, 0.5f);
+    go->velocity = glm::vec3(-0.5f, 0.0f, -0.5f);
     go = World::addGameObject("fish", glm::vec3(0, -4, 0), 0.1f);
     go->velocity = glm::vec3(0.5f, 0.0f, 0.0f);
-    /*
+
     float gridSize = 10;
 
     for (int i = 0; i < 20; i++)
@@ -46,8 +48,9 @@ void World::init()
         float z = static_cast<float>(rand()) / static_cast<float>(RAND_MAX) - 0.5;
 
         go = World::addGameObject("fish", glm::vec3(x * gridSize, y * gridSize, z * gridSize), .1f);
-        go->velocity=glm::vec3(0.1f, 0.1f, 0.0f);
-    }*/
+        // go->velocity=glm::vec3(0.1f, 0.1f, 0.0f);
+        swarm.push_back(go);
+    }
     World::addGameObject("crate", glm::vec3(0, 5, 0));
     World::addGameObject("ground", glm::vec3(0, -15, 0));
 }
@@ -70,9 +73,31 @@ void World::render(Shader *shader)
 
 void World::update(float tslf)
 {
+    for (auto curr_obj : swarm)
+    {
+        float collision_radius = 1.0f;
+        float position_radius = 1.0f;
+        float collision_distance = 1.0f;
+
+        std::vector neighbours = swarm;
+        glm::vec3 avg_pos = glm::vec3(0.0f);
+        for (auto neighbour : neighbours)
+        {
+            if(neighbour==curr_obj){
+                continue;
+            }
+            avg_pos += neighbour->pos;
+        }
+        avg_pos /= neighbours.size();
+
+        glm::vec3 dir = glm::normalize(avg_pos-curr_obj->pos);
+
+        // acceleration = 1
+        curr_obj->velocity += dir*tslf;
+    }
     for (auto ao : animatedObjects)
     {
-        ao->pos += ao->velocity*tslf;
+        ao->pos += ao->velocity * tslf;
         ao->time += tslf;
     }
 }
