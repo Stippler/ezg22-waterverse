@@ -28,13 +28,15 @@ void World::init()
     //plights.push_back(new PointLight(glm::vec3(2.0f, -4.0f, 0.0f), glm::vec3(0.2f, 0.2f, 0.2f), glm::vec3(0.5f, 0.5f, 0.5f), glm::vec3(1.0f, 1.0f, 1.0f), 1.0, 0.5, 1.0));
 
     animatedModelMap.emplace("whiteshark", new AnimatedModel("assets/models/whiteshark/WhiteShark.gltf"));
-    animatedModelMap.emplace("fish", new AnimatedModel("assets/models/guppy-fish/Guppy.gltf", M_PI/2));
+    animatedModelMap.emplace("fish", new AnimatedModel("assets/models/guppy-fish/Guppy.gltf", M_PI));
     staticModelMap.emplace("crate", new AnimatedModel("assets/models/Crate/Crate1.obj"));
     staticModelMap.emplace("ground", new AnimatedModel("assets/models/floor/floor.obj"));
 
     auto go = World::addGameObject("whiteshark", glm::vec3(0, -8, 0));
-    /*go->velocity = glm::vec3(0.1f, 0.1f, 0);
-
+    go->velocity = glm::vec3(0.5f, 0.5f, 0.5f);
+    go = World::addGameObject("fish", glm::vec3(0, -4, 0), 0.1f);
+    go->velocity = glm::vec3(0.5f, 0.0f, 0.0f);
+    /*
     float gridSize = 10;
 
     for (int i = 0; i < 20; i++)
@@ -46,7 +48,6 @@ void World::init()
         go = World::addGameObject("fish", glm::vec3(x * gridSize, y * gridSize, z * gridSize), .1f);
         go->velocity=glm::vec3(0.1f, 0.1f, 0.0f);
     }*/
-    World::addGameObject("fish", glm::vec3(0, -4, 0), 0.1f);
     World::addGameObject("crate", glm::vec3(0, 5, 0));
     World::addGameObject("ground", glm::vec3(0, -15, 0));
 }
