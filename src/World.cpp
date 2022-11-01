@@ -73,27 +73,95 @@ void World::render(Shader *shader)
 
 void World::update(float tslf)
 {
+    glm::vec3 center = glm::vec3(0);
+
     for (auto curr_obj : swarm)
     {
         float collision_radius = 1.0f;
-        float position_radius = 1.0f;
-        float collision_distance = 1.0f;
+        float view_radius = 2.0f;
+        float center_radius = 20.0f;
+        float collision_influence = 0.7f;
+        float velocity_influence = 0.25f;
+        float position_influence = 0.15f;
+        float center_influence = 1.0f;
+        float acceleration = 5.0f;
+        float max_speed = 5.0f;
 
-        std::vector neighbours = swarm;
-        glm::vec3 avg_pos = glm::vec3(0.0f);
-        for (auto neighbour : neighbours)
+        // calculate average position and speed:
+        int view_count = 0;
+        int collision_count = 0;
+        glm::vec3 position = glm::vec3(0.0f);
+        glm::vec3 velocity = glm::vec3(0.0f);
+        glm::vec3 collision_position = glm::vec3(0.0f);
+
+        for (auto neighbour : swarm)
         {
-            if(neighbour==curr_obj){
+            if (neighbour == curr_obj)
+            {
                 continue;
             }
-            avg_pos += neighbour->pos;
+            float dist = glm::length(neighbour->pos - curr_obj->pos);
+            if (dist > view_radius)
+            {
+                continue;
+            }
+            position += neighbour->pos;
+            velocity += neighbour->velocity;
+            view_count++;
+            if (dist > collision_radius)
+            {
+                continue;
+            }
+            collision_position += neighbour->pos;
+            collision_count++;
         }
-        avg_pos /= neighbours.size();
 
-        glm::vec3 dir = glm::normalize(avg_pos-curr_obj->pos);
+        glm::vec3 dir = glm::vec3(0);
+        if (view_count != 0)
+        {
+            position /= view_count;
+            velocity /= view_count;
 
-        // acceleration = 1
-        curr_obj->velocity += dir*tslf;
+            if (glm::length(position) != 0)
+            {
+                glm::vec3 position_dir = glm::normalize(position - curr_obj->pos);
+                dir += position_dir * position_influence;
+            }
+
+            if (glm::length(velocity) != 0)
+            {
+                glm::vec3 velocity_dir = glm::normalize(velocity);
+                dir += velocity_dir * velocity_influence;
+            }
+        }
+        if (collision_count != 0)
+        {
+            collision_position /= collision_count;
+            if (glm::length(collision_position) != 0)
+            {
+                glm::vec3 collision_dir = glm::normalize(curr_obj->pos - collision_position);
+                dir += collision_dir * collision_influence;
+            }
+        }
+        float dist_to_center = glm::length(curr_obj->pos);
+        if (dist_to_center > center_radius)
+        {
+            dir += glm::normalize(-curr_obj->pos) * center_influence;
+        }
+
+        if(glm::length(dir)==0) {
+            dir = glm::vec3(0, 0, 1.0f);
+        }
+        dir = glm::normalize(dir);
+
+
+        curr_obj->velocity += acceleration * dir * tslf;
+
+        float speed = glm::length(curr_obj->velocity);
+        if (speed > max_speed)
+        {
+            curr_obj->velocity *= (max_speed / speed);
+        }
     }
     for (auto ao : animatedObjects)
     {
