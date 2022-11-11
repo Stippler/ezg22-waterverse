@@ -6,8 +6,6 @@ in vec3 Normal;
 in vec3 FragPos;
 in vec2 TexCoord;
 in vec4 FragPosLightSpace;
-// flat in ivec4 Bones;
-// in vec4 W;
 #define NR_POINT_LIGHTS 1  
 
 uniform sampler2D texture_diffuse1;
@@ -42,8 +40,6 @@ struct PointLight {
 };
 
 uniform DirLight light;
-
-//uniform PointLight plight;
 uniform PointLight plight[NR_POINT_LIGHTS];
 float far_plane = 25.0;
 

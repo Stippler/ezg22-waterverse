@@ -8,10 +8,12 @@
 
 #include "TextureLoader.h"
 
-Sphere::Sphere(std::string texturePath, float radius, int sectorCount, int stackCount, glm::vec3 position) : texturePath(texturePath)
+Sphere::Sphere(float radius, int sectorCount, int stackCount, glm::vec3 position)
 {
 	model = glm::translate(model, position);
-	unsigned int texture = TextureLoader::getTexture(texturePath);
+
+	textureDiffuse = TextureLoader::getTexture("assets/silver.jpg");
+	// textureSpecular = TextureLoader::getTexture("assets/bricks_specular.dds");
 
 	std::vector<float> vertices;
 	std::vector<float> normals;
@@ -117,20 +119,18 @@ Sphere::Sphere(std::string texturePath, float radius, int sectorCount, int stack
 	glGenVertexArrays(1, &VAO);
 	glBindVertexArray(VAO);
 
-	unsigned int VBO;
 	glGenBuffers(1, &VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * interleavedVertices.size(), interleavedVertices.data(), GL_STATIC_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glBufferData(GL_ARRAY_BUFFER, (unsigned int)interleavedVertices.size() * sizeof(float), interleavedVertices.data(), GL_STATIC_DRAW);
 
 	// copy index data to VBO
-	GLuint iboId;
-	glGenBuffers(1, &iboId);
+	glGenBuffers(1, &EBO);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO); // for index data
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER,		  // target
 				 (unsigned int)indices.size()*sizeof(unsigned int),			  // data size, # of bytes
 				 indices.data(),			  // ptr to index data
 				 GL_STATIC_DRAW);				  // usage
 
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, iboId); // for index data
 
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)0);
 	glEnableVertexAttribArray(0);
@@ -142,15 +142,25 @@ Sphere::Sphere(std::string texturePath, float radius, int sectorCount, int stack
 
 void Sphere::draw(Shader *shader)
 {
-	shader->use();
 	shader->setMat4("model", model);
 
 	glActiveTexture(GL_TEXTURE0);
-	glUniform1i(glGetUniformLocation(shader->ID, "texture_diffuse1"), texture);
-	glBindTexture(GL_TEXTURE_2D, texture);
+	glUniform1i(glGetUniformLocation(shader->ID, "texture_diffuse1"), 1);
+	glBindTexture(GL_TEXTURE_2D, textureDiffuse);
 
+
+	// glActiveTexture(GL_TEXTURE0);
+	// glUniform1i(glGetUniformLocation(shader->ID, "texture_specular1"), 1);
+	// glBindTexture(GL_TEXTURE_2D, textureDiffuse);
+
+    // glActiveTexture(GL_TEXTURE0); // active proper texture unit before binding
+    // glUniform1i(glGetUniformLocation(shader->ID, "texture_diffuse1");
+    // glBindTexture(GL_TEXTURE_2D, texture);
+
+	glBindVertexArray(VAO);
 	glDrawElements(GL_TRIANGLES,                // primitive type
                indices.size(),          		// # of indices
                GL_UNSIGNED_INT,                 // data type
-               (void*)0);
+               0);
+	glBindVertexArray(0);
 }

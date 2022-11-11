@@ -10,6 +10,8 @@
 #include "FileWatcher.h"
 #include "Window.h"
 
+#include "World.h"
+
 Water::Water(unsigned int width, unsigned int height) : width(width), height(height)
 {
     assert(width % 2 == 0);
@@ -118,6 +120,13 @@ void Water::update(float tslf)
         std::cout << "reload test computing shader" << std::endl;
         reloadCompute = false;
     }
+    static int ledl = 0;
+
+    if(ledl%100==0) {
+        addDrop(glm::vec2(0.5, 0), 0.1, 3);
+        addDrop(glm::vec2(-0.5, 0), 0.1, 3);
+    }
+    ledl++;
 
     stepSimulation();
     stepSimulation();
@@ -135,11 +144,12 @@ void Water::render()
 
     // bind textures
     waterShader->use();
-    Window::setMatrices(waterShader);
-    waterShader->setMat4("model", model);
-
-    waterShader->setInt("tex", 0);
     texture->bind(0);
+
+    Window::setMatrices(waterShader);
+    waterShader->setDirLight("light", World::getDirLight());
+    waterShader->setMat4("model", model);
+    waterShader->setInt("tex", 0);
 
     glBindVertexArray(VAO);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);

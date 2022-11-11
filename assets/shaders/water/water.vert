@@ -5,6 +5,9 @@ layout(location = 1) in vec2 texCoord;
 
 out vec2 fragTexCoord;
 
+out vec3 fragPos;
+out vec3 fragNormal;
+
 uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
@@ -36,11 +39,16 @@ void main() {
 
     float scale = 20;
 
-    float height = texture(tex, texCoord).x;      
+    vec4 info = texture(tex, texCoord);
+    float height = info.x;      
+    vec3 normal =  vec3(info.z, sqrt(1.0 - dot(info.ba, info.ba)), info.w);
 
     trans *= buildTranslation(vec3(-scale/2, height-5, -scale/2));
     trans *= buildScaling(vec3(scale, 1, scale));
 
+	// FragPos = vec3(model * vec4(aPos, 1.0));
+    fragPos = vec3(trans*vec4(pos, 1.0));
+    fragNormal = normal;
     gl_Position = projection * view * trans * vec4(pos, 1.0);
     // fragPos = vec3(model*vec4(pos, 1.0));
     fragTexCoord = texCoord;

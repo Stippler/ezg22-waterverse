@@ -37,6 +37,7 @@ unsigned int modelLoc, viewLoc, projectionLoc;
 
 // init depth shader
 Shader *skinningShader;
+Shader *test;
 
 // Shadow predefines
 ShadowMap *shadowMap;
@@ -121,7 +122,8 @@ void Renderer::render()
         resizeViewport=false;
     }
 
-    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+    glClearColor(1.f, 1.f, 1.f, 1.0f);
+
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glDisable(GL_BLEND);
     gbuffer->render();
@@ -146,8 +148,8 @@ void Renderer::render()
     skinningShader->setInt("gNormal", 5);
     skinningShader->setInt("gAlbedo", 6);
     skinningShader->setInt("cubeShadowMap", 7);
-    //set cubemap int
 
+    //set cubemap int
     // ssaoColorBufferBlur
     shadowMap->bindShadowMap();
     glActiveTexture(GL_TEXTURE3); // add extra SSAO texture to lighting pass
@@ -160,7 +162,8 @@ void Renderer::render()
     glBindTexture(GL_TEXTURE_2D, gbuffer->gAlbedo);
     glActiveTexture(GL_TEXTURE7); 
     glBindTexture(GL_TEXTURE_CUBE_MAP, cubeMap->depthCubeMap);
-    //bind cube map
+
+    // bind cube map
     World::renderGameObjects(skinningShader);
     World::renderWater();
 }

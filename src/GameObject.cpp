@@ -26,33 +26,11 @@ void GameObject::render(Shader *shader)
     float yaw = 0.0f;
     float pitch = 0.0f;
     float roll = 0.0f;
-    // if (abs(vel_length) > 0.00000001)
-    // {
-    //     pitch += asin(-velocity.y / vel_length);
-    //     // float yaw = 0; // Beware cos(pitch)==0, catch this exception!
-    //     if (cos(pitch) != 0)
-    //     {
-    //         yaw += asin(velocity.x / (cos(pitch) * length(velocity)));
-    //     }
-    // }
-    // // // modelMatrix = glm::rotate(modelMatrix, yaw, glm::vec3(0.0f, 1.0f, 0.0f));
-    // // // modelMatrix = glm::rotate(modelMatrix, pitch, glm::vec3(1.0f, 0.0f, 0.0f));
-    // // modelMatrix *= rotMat;
-    // auto quat = glm::quat(glm::vec3(pitch, yaw + model->defaultYaw, roll));
-    // glm::mat4 rotMat = glm::toMat4(quat);
-    // modelMatrix *= rotMat;
-    // modelMatrix = glm::rotate(modelMatrix, model->defaultYaw, glm::vec3(0, 1.0f, 0.0f));
-    // glm::vec3 up = glm::vec3(0, 1, 0);
-    // glm::vec3 dir = velocity;
-    // glm::vec3 xaxis = glm::normalize(glm::cross(up, dir));
-    // glm::vec3 yaxis = glm::normalize(glm::cross(dir, xaxis));
-    // glm::mat4(1.0f);
 
     if (abs(vel_length) > 0.00000001)
     {
         modelMatrix *= glm::orientation(glm::normalize(velocity), model->axis);
     }
-    // modelMatrix = glm::rotate(modelMatrix, model->defaultYaw, glm::vec3(0.0f, 1.0f, 0.0f));
 
     shader->setMat4("model", modelMatrix);
 

@@ -17,10 +17,8 @@ std::unordered_map<std::string, AnimatedModel *> staticModelMap;
 
 DirLight *light;
 std::vector<PointLight *> plights;
-
 std::vector<GameObject *> swarm;
-
-std::vector<Sphere *> spheres;
+std::vector<GameObject *> spheres;
 Water *water;
 
 // std::vector<AnimatedModel *> models;
@@ -40,14 +38,19 @@ void World::init()
     animatedModelMap.emplace("fish", new AnimatedModel("assets/models/guppy-fish/Guppy.gltf", glm::vec3(0, 0, -1.0f)));
     staticModelMap.emplace("crate", new AnimatedModel("assets/models/Crate/Crate1.obj"));
     staticModelMap.emplace("ground", new AnimatedModel("assets/models/floor/floor.obj"));
+    staticModelMap.emplace("sphere", new AnimatedModel("assets/models/sphere/sphere.obj"));
 
-    // Sphere *sphere = new Sphere("assets/silver.jpg");
-    // spheres.push_back(sphere);
-
+    World::addGameObject("sphere", glm::vec3(0, 3, 0));
     auto go = World::addGameObject("whiteshark", glm::vec3(0, -8, 0));
-    go->velocity = glm::vec3(-0.5f, 0.0f, -0.5f);
-    go = World::addGameObject("fish", glm::vec3(0, -4, 0), 0.1f);
-    go->velocity = glm::vec3(0.5f, 0.0f, 0.0f);
+    auto sphere = World::addGameObject("sphere", glm::vec3(0, 1, 0));
+    spheres.push_back(sphere);
+
+    // go->velocity = glm::vec3(-0.5f, 0.0f, -0.5f);
+    // go = World::addGameObject("fish", glm::vec3(0, -4, 0), 0.1f);
+    // go->velocity = glm::vec3(0.5f, 0.0f, 0.0f);
+
+    // Sphere *sphere = new Sphere();
+    // spheres.push_back(sphere);
 
     float gridSize = 10;
 
@@ -57,9 +60,9 @@ void World::init()
         float y = static_cast<float>(rand()) / static_cast<float>(RAND_MAX) - 0.5;
         float z = static_cast<float>(rand()) / static_cast<float>(RAND_MAX) - 0.5;
 
-        go = World::addGameObject("fish", glm::vec3(x * gridSize, y * gridSize, z * gridSize), .1f);
+        GameObject *fish = World::addGameObject("fish", glm::vec3(x * gridSize, y * gridSize, z * gridSize), .1f);
+        swarm.push_back(fish);
         // go->velocity=glm::vec3(0.1f, 0.1f, 0.0f);
-        swarm.push_back(go);
     }
     World::addGameObject("crate", glm::vec3(0, 5, 0));
     World::addGameObject("ground", glm::vec3(0, -15, 0));
@@ -79,15 +82,13 @@ void World::renderGameObjects(Shader *shader)
     {
         go->render(shader);
     }
-    renderSpheres(shader);
 }
-
 
 void World::renderSpheres(Shader *shader)
 {
     for (auto sphere : spheres)
     {
-        sphere->draw(shader);
+        sphere->render(shader);
     }
 }
 
@@ -202,7 +203,6 @@ void World::update(float tslf)
     // swarm update end
 }
 
-
 GameObject *World::addGameObject(std::string model, glm::vec3 pos, float scale)
 {
     if (staticModelMap.find(model) != staticModelMap.end())
@@ -262,7 +262,7 @@ glm::mat4 World::getLightSpaceMatrix()
     return lightSpaceMatrix;
 }
 
-std::vector<Sphere*> World::getSpheres()
+std::vector<GameObject *> World::getSpheres()
 {
     return spheres;
 }

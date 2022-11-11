@@ -96,7 +96,8 @@ void main()
     //vec3 viewDir  = normalize(-FragPos); // viewpos is (0.0.0)
     vec3 viewDir = normalize(viewPos - FragPos);
     // diffuse
-    /*vec3 lightDir = normalize(light.position - FragPos);
+    /*
+    vec3 lightDir = normalize(light.position - FragPos);
     vec3 diffuse = max(dot(Normal, lightDir), 0.0) * Diffuse * light.color;
     // speculard
     vec3 halfwayDir = normalize(lightDir + viewDir);  
@@ -107,7 +108,8 @@ void main()
     float attenuation = 1.0 / (1.0 + light.linear * distance + light.quadratic * distance * distance);
     diffuse *= attenuation;
     specular *= attenuation;
-    lighting += diffuse + specular;*/
+    lighting += diffuse + specular;
+    */
 
     //float shadow = ShadowCalculation(FragPosLightSpace, norm);
     vec3 lighting = vec3(0, 0, 0);

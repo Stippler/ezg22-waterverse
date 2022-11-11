@@ -2,3 +2,4 @@ build
 assets/models
 .vs
 .vscode
+*.png
