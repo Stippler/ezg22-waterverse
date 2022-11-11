@@ -58,7 +58,7 @@ void ShadowMap::render()
     glEnable(GL_CULL_FACE);
     glCullFace(GL_FRONT);
     glDisable(GL_CULL_FACE);
-    World::render(depthSkinning);
+    World::renderGameObjects(depthSkinning);
     glCullFace(GL_BACK);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 

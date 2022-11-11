@@ -22,11 +22,11 @@
 #include "Material.h"
 #include "GBuffer.h"
 #include "SSAO.h"
-#include "World.h"
 #include "CubeMap.h"
+#include "World.h"
 
 // Water
-Water *water;
+// Water *water;
 GBuffer *gbuffer;
 SSAO *ssao;
 
@@ -52,7 +52,7 @@ long long StartTimeMillis = 0;
 void Renderer::init()
 {
     glEnable(GL_DEPTH_TEST);
-    water = new Water();
+    // water = new Water();
 
     const char *vertexShader5 = "assets/shaders/skinning.vert";
     const char *fragmentShader5 = "assets/shaders/skinning.frag";
@@ -161,7 +161,6 @@ void Renderer::render()
     glActiveTexture(GL_TEXTURE7); 
     glBindTexture(GL_TEXTURE_CUBE_MAP, cubeMap->depthCubeMap);
     //bind cube map
-    World::render(skinningShader);
-
-    water->render();
+    World::renderGameObjects(skinningShader);
+    World::renderWater();
 }

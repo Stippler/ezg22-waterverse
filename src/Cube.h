@@ -9,7 +9,7 @@
 #include <vector>
 #include <string>
 #include <GL/gl.h>
-#include"stb_image.h"
+#include "stb_image.h"
 #include "Shader.h"
 #include <iostream>
 

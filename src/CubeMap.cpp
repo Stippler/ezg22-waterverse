@@ -70,7 +70,7 @@ void CubeMap::render(){
 
     shaderDepthCubeMap->setFloat("far_plane", this->far);
     shaderDepthCubeMap->setVec3("lightPos", lightPos);
-    World::render(shaderDepthCubeMap);
+    World::renderGameObjects(shaderDepthCubeMap);
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glViewport(0, 0, Window::getWidth(), Window::getHeight());

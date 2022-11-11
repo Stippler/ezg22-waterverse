@@ -24,10 +24,9 @@ Water::Water(unsigned int width, unsigned int height) : width(width), height(hei
     printf("max global (total) work group counts x:%i y:%i z:%i\n",
            work_grp_cnt[0], work_grp_cnt[1], work_grp_cnt[2]);
 
-    test = new ComputeShader("assets/shaders/water/test.comp");
-    normal = new ComputeShader("assets/shaders/water/normal.comp");
-    update = new ComputeShader("assets/shaders/water/update.comp");
-    drop = new ComputeShader("assets/shaders/water/drop.comp");
+    normalCompute = new ComputeShader("assets/shaders/water/normal.comp");
+    updateCompute = new ComputeShader("assets/shaders/water/update.comp");
+    dropCompute = new ComputeShader("assets/shaders/water/drop.comp");
 
     waterShader = new Shader("assets/shaders/water/water.vert",
                              "assets/shaders/water/water.frag");
@@ -36,8 +35,6 @@ Water::Water(unsigned int width, unsigned int height) : width(width), height(hei
     texture = new WaterTexture(width, height);
     copyTexture = new WaterTexture(width, height);
 
-    FileWatcher::add("assets/shaders/water/test.comp", [&]()
-                     { reloadCompute = true; });
     FileWatcher::add("assets/shaders/water/normal.comp", [&]()
                      { reloadCompute = true; });
     FileWatcher::add("assets/shaders/water/update.comp", [&]()
@@ -84,18 +81,6 @@ Water::Water(unsigned int width, unsigned int height) : width(width), height(hei
         }
     }
 
-    // float vertices2[] = {
-    //     // positions        // texture coords
-    //     0.5f, 0.5f, 0.0f, 1.0f, 1.0f,   // top right
-    //     0.5f, -0.5f, 0.0f, 1.0f, 0.0f,  // bottom right
-    //     -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, // bottom left
-    //     -0.5f, 0.5f, 0.0f, 0.0f, 1.0f   // top left
-    // };
-    // unsigned int indices2[] = {
-    //     0, 1, 3, // first triangle
-    //     1, 2, 3  // second triangle
-    // };
-
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
     glGenBuffers(1, &EBO);
@@ -115,20 +100,6 @@ Water::Water(unsigned int width, unsigned int height) : width(width), height(hei
     // vertex textureCoordinates
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
-
-    // glGenVertexArrays(1, &VAO2);
-    // glGenBuffers(1, &VBO2);
-    // glGenBuffers(1, &EBO2);
-
-    // glBindVertexArray(VAO2);
-
-    // // position attribute
-    // glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)0);
-    // glEnableVertexAttribArray(0);
-
-    // // texture coord attribute
-    // glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)(3 * sizeof(float)));
-    // glEnableVertexAttribArray(1);
 }
 
 Water::~Water()
@@ -136,36 +107,25 @@ Water::~Water()
     delete texture;
 }
 
-void Water::render()
+void Water::update(float tslf)
 {
     if (reloadCompute)
     {
-        test->reload();
-        normal->reload();
-        drop->reload();
-        update->reload();
+        normalCompute->reload();
+        dropCompute->reload();
+        updateCompute->reload();
+
         std::cout << "reload test computing shader" << std::endl;
         reloadCompute = false;
     }
 
-    static int ledl = 0;
-
-    if(ledl%100==0) {
-        addDrop(glm::vec2(0.5, 0), 0.1, 3);
-        addDrop(glm::vec2(-0.5, 0), 0.1, 3);
-    }
-    ledl++;
-
-    // test->use();
-    // texture->bindImage(0, GL_WRITE_ONLY);
-    // glDispatchCompute(texture->width, texture->height, 1);
-    // glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
-    // glFinish();
-
     stepSimulation();
     stepSimulation();
     updateNormals();
+}
 
+void Water::render()
+{
     if (reloadShader)
     {
         waterShader->reload();
@@ -188,10 +148,10 @@ void Water::render()
 
 void Water::addDrop(glm::vec2 center, float radius, float strength)
 {
-    drop->use();
-    drop->setVec2("center", center);
-    drop->setFloat("radius", radius);
-    drop->setFloat("strength", strength);
+    dropCompute->use();
+    dropCompute->setVec2("center", center);
+    dropCompute->setFloat("radius", radius);
+    dropCompute->setFloat("strength", strength);
     texture->bindImage(0, GL_READ_ONLY);
     copyTexture->bindImage(1, GL_WRITE_ONLY);
     glDispatchCompute(texture->width, texture->height, 1);
@@ -201,7 +161,7 @@ void Water::addDrop(glm::vec2 center, float radius, float strength)
 
 void Water::stepSimulation()
 {
-    update->use();
+    updateCompute->use();
     texture->bindImage(0, GL_READ_ONLY);
     copyTexture->bindImage(1, GL_WRITE_ONLY);
     glDispatchCompute(texture->width, texture->height, 1);
@@ -211,7 +171,7 @@ void Water::stepSimulation()
 
 void Water::updateNormals()
 {
-    normal->use();
+    normalCompute->use();
     texture->bindImage(0, GL_READ_ONLY);
     copyTexture->bindImage(1, GL_WRITE_ONLY);
     glDispatchCompute(texture->width, texture->height, 1);

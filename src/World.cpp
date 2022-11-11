@@ -1,11 +1,13 @@
 #include "World.h"
-#include "AnimatedModel.h"
-#include "Window.h"
 
 #include <glm/glm.hpp>
 #include <assert.h>
 #include <unordered_map>
 #include <vector>
+
+#include "AnimatedModel.h"
+#include "Window.h"
+#include "Water.h"
 
 std::vector<GameObject *> animatedObjects;
 std::vector<GameObject *> staticObjects;
@@ -18,12 +20,17 @@ std::vector<PointLight *> plights;
 
 std::vector<GameObject *> swarm;
 
+std::vector<Sphere *> spheres;
+Water *water;
+
 // std::vector<AnimatedModel *> models;
 // std::vector<Cube*> cubes;
 
 void World::init()
 {
+    water = new Water();
     light = new DirLight(glm::vec3(1.0f, -1.0f, 0.0f), glm::vec3(0.2f, 0.2f, 0.2f), glm::vec3(0.5f, 0.5f, 0.5f), glm::vec3(1.0f, 1.0f, 1.0f));
+
     // light = new DirLight(glm::vec3(1.0f, -1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f));
     plights.push_back(new PointLight(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.2f, 0.2f, 0.2f), glm::vec3(0.5f, 0.5f, 0.5f), glm::vec3(1.0f, 1.0f, 1.0f), 1.0, 0.5, 1.0));
     // plights.push_back(new PointLight(glm::vec3(3.0f, -8.0f, 0.0f), glm::vec3(0.2f, 0.2f, 0.2f), glm::vec3(0.5f, 0.5f, 0.5f), glm::vec3(1.0f, 1.0f, 1.0f), 1.0, 0.5, 1.0));
@@ -33,6 +40,9 @@ void World::init()
     animatedModelMap.emplace("fish", new AnimatedModel("assets/models/guppy-fish/Guppy.gltf", glm::vec3(0, 0, -1.0f)));
     staticModelMap.emplace("crate", new AnimatedModel("assets/models/Crate/Crate1.obj"));
     staticModelMap.emplace("ground", new AnimatedModel("assets/models/floor/floor.obj"));
+
+    // Sphere *sphere = new Sphere("assets/silver.jpg");
+    // spheres.push_back(sphere);
 
     auto go = World::addGameObject("whiteshark", glm::vec3(0, -8, 0));
     go->velocity = glm::vec3(-0.5f, 0.0f, -0.5f);
@@ -55,7 +65,7 @@ void World::init()
     World::addGameObject("ground", glm::vec3(0, -15, 0));
 }
 
-void World::render(Shader *shader)
+void World::renderGameObjects(Shader *shader)
 {
     shader->use();
     Window::setMatrices(shader);
@@ -69,19 +79,40 @@ void World::render(Shader *shader)
     {
         go->render(shader);
     }
+    renderSpheres(shader);
+}
+
+
+void World::renderSpheres(Shader *shader)
+{
+    for (auto sphere : spheres)
+    {
+        sphere->draw(shader);
+    }
+}
+
+void World::renderWater()
+{
+    water->render();
 }
 
 void World::update(float tslf)
 {
-    glm::vec3 center = glm::vec3(0);
+    for (auto sphere : spheres)
+    {
+        // TODO: update sphere
+    }
+    water->update(tslf);
 
+    // Swarm update:
+    glm::vec3 center = glm::vec3(0);
     for (auto curr_obj : swarm)
     {
         float collision_radius = 1.0f;
-        float view_radius = 2.0f;
+        float view_radius = 5.0f;
         float center_radius = 20.0f;
         float collision_influence = 0.7f;
-        float velocity_influence = 0.25f;
+        float velocity_influence = 0.15f;
         float position_influence = 0.15f;
         float center_influence = 1.0f;
         float acceleration = 5.0f;
@@ -149,11 +180,11 @@ void World::update(float tslf)
             dir += glm::normalize(-curr_obj->pos) * center_influence;
         }
 
-        if(glm::length(dir)==0) {
+        if (glm::length(dir) == 0)
+        {
             dir = glm::vec3(0, 0, 1.0f);
         }
         dir = glm::normalize(dir);
-
 
         curr_obj->velocity += acceleration * dir * tslf;
 
@@ -168,7 +199,9 @@ void World::update(float tslf)
         ao->pos += ao->velocity * tslf;
         ao->time += tslf;
     }
+    // swarm update end
 }
+
 
 GameObject *World::addGameObject(std::string model, glm::vec3 pos, float scale)
 {
@@ -227,6 +260,11 @@ glm::mat4 World::getLightSpaceMatrix()
     lightSpaceMatrix = lightProjection * lightView;
 
     return lightSpaceMatrix;
+}
+
+std::vector<Sphere*> World::getSpheres()
+{
+    return spheres;
 }
 
 std::vector<GameObject *> World::getAnimatedObjects()

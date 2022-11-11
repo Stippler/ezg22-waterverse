@@ -21,6 +21,8 @@ public:
     void stepSimulation();
     void updateNormals();
 
+    void update(float tslf);
+
     void render();
 private:
 
@@ -33,10 +35,9 @@ private:
 
     glm::mat4 model;
 
-    ComputeShader *test;
-    ComputeShader *normal;
-    ComputeShader *drop;
-    ComputeShader *update;
+    ComputeShader *normalCompute;
+    ComputeShader *dropCompute;
+    ComputeShader *updateCompute;
 
     WaterTexture *texture;
     WaterTexture *copyTexture;

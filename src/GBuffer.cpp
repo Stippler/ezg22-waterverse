@@ -98,6 +98,6 @@ void GBuffer::render()
 
     glBindFramebuffer(GL_FRAMEBUFFER, gBuffer);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    World::render(shaderGeometryPass);
+    World::renderGameObjects(shaderGeometryPass);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
