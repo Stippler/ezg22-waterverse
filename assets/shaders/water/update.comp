@@ -21,7 +21,7 @@ void main() {
   info.y += (average - info.x) * 2.0;
 
   /* attenuate the velocity a little so waves do not last forever */
-  info.y *= 0.995;
+  //info.y *= 0.995;
 
   /* move the vertex along the velocity */
   info.x += info.y;

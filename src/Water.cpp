@@ -33,6 +33,9 @@ Water::Water(unsigned int width, unsigned int height) : width(width), height(hei
     waterShader = new Shader("assets/shaders/water/water.vert",
                              "assets/shaders/water/water.frag");
 
+    causticsShader = new Shader("assets/shaders/water/caustics.vert",
+                             "assets/shaders/water/caustics.frag");
+
     std::cout << width << "   " << height << std::endl;
     texture = new WaterTexture(width, height);
     copyTexture = new WaterTexture(width, height);
@@ -102,6 +105,30 @@ Water::Water(unsigned int width, unsigned int height) : width(width), height(hei
     // vertex textureCoordinates
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
+
+    glGenFramebuffers(1, &causticsFBO);
+    glBindFramebuffer(GL_FRAMEBUFFER, causticsFBO);
+
+    glGenTextures(1, &caustics);
+    glBindTexture(GL_TEXTURE_2D, caustics);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, 1024, 1024, 0, GL_RGBA, GL_FLOAT, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, caustics, 0);
+
+    unsigned int attachment[1] = {GL_COLOR_ATTACHMENT0};
+    glDrawBuffers(1, attachment);
+    //glBlendEquationi(0, GL_MAX);
+    //glBlendFunci(0, GL_ONE, GL_ZERO);
+
+    // finally check if framebuffer is complete
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+    {
+        std::cout << "Framebuffer not complete!" << std::endl;
+    }
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 Water::~Water()
@@ -122,7 +149,7 @@ void Water::update(float tslf)
     }
     static int ledl = 0;
 
-    if(ledl%100==0) {
+    if(ledl%100==0 && ledl <2) {
         addDrop(glm::vec2(0.5, 0), 0.1, 3);
         addDrop(glm::vec2(-0.5, 0), 0.1, 3);
     }
@@ -154,6 +181,31 @@ void Water::render()
     glBindVertexArray(VAO);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glDrawElements(GL_TRIANGLES, idx, GL_UNSIGNED_INT, 0);
+}
+
+void Water::renderCaustics(unsigned int environment){
+    glViewport(0, 0, 1024, 1024);
+    glBindFramebuffer(GL_FRAMEBUFFER, causticsFBO);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    causticsShader->use();
+    texture->bind(0);
+
+    Window::setMatrices(causticsShader);
+    causticsShader->setMat4("lightSpaceMatrix", World::getLightSpaceMatrix());
+    causticsShader->setDirLight("light", World::getDirLight());
+    causticsShader->setMat4("model", model);
+    causticsShader->setInt("tex", 0);
+    causticsShader->setInt("environment", 1);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, environment);
+
+    glBindVertexArray(VAO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glDrawElements(GL_TRIANGLES, idx, GL_UNSIGNED_INT, 0);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    glViewport(0, 0, Window::getWidth(), Window::getHeight());
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
 void Water::addDrop(glm::vec2 center, float radius, float strength)

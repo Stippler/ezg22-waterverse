@@ -127,11 +127,13 @@ void Renderer::render()
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glDisable(GL_BLEND);
     gbuffer->render();
+    gbuffer->renderEnvironment();
     ssao->render();
     glEnable(GL_BLEND);
 
     shadowMap->render();
     cubeMap->render();
+    World::renderCaustics(gbuffer->environment);
 
     // Render scene normally
     // Skinning Shader
@@ -148,6 +150,7 @@ void Renderer::render()
     skinningShader->setInt("gNormal", 5);
     skinningShader->setInt("gAlbedo", 6);
     skinningShader->setInt("cubeShadowMap", 7);
+    skinningShader->setInt("caustics", 8);
 
     //set cubemap int
     // ssaoColorBufferBlur
@@ -162,6 +165,8 @@ void Renderer::render()
     glBindTexture(GL_TEXTURE_2D, gbuffer->gAlbedo);
     glActiveTexture(GL_TEXTURE7); 
     glBindTexture(GL_TEXTURE_CUBE_MAP, cubeMap->depthCubeMap);
+    glActiveTexture(GL_TEXTURE8); 
+    glBindTexture(GL_TEXTURE_2D, World::getCaustics());
 
     // bind cube map
     World::renderGameObjects(skinningShader);

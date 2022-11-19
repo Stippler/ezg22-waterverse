@@ -24,6 +24,8 @@ public:
     void update(float tslf);
 
     void render();
+    void renderCaustics(unsigned int environment);
+    unsigned int causticsFBO, caustics;
 private:
 
     unsigned int width, height;
@@ -43,6 +45,7 @@ private:
     WaterTexture *copyTexture;
 
     Shader *waterShader;
+    Shader *causticsShader;
 
     bool reloadCompute = false;
     bool reloadShader = false;

@@ -27,7 +27,7 @@ Water *water;
 void World::init()
 {
     water = new Water();
-    light = new DirLight(glm::vec3(1.0f, -1.0f, 0.0f), glm::vec3(0.2f, 0.2f, 0.2f), glm::vec3(0.5f, 0.5f, 0.5f), glm::vec3(1.0f, 1.0f, 1.0f));
+    light = new DirLight(glm::vec3(0.01f, -1.0f, 0.0f), glm::vec3(0.2f, 0.2f, 0.2f), glm::vec3(0.5f, 0.5f, 0.5f), glm::vec3(1.0f, 1.0f, 1.0f));
 
     // light = new DirLight(glm::vec3(1.0f, -1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f));
     plights.push_back(new PointLight(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.2f, 0.2f, 0.2f), glm::vec3(0.5f, 0.5f, 0.5f), glm::vec3(1.0f, 1.0f, 1.0f), 1.0, 0.5, 1.0));
@@ -72,13 +72,14 @@ void World::renderGameObjects(Shader *shader)
 {
     shader->use();
     Window::setMatrices(shader);
-    shader->setInt("animated", 1);
-    for (auto go : World::getAnimatedObjects())
+    
+    shader->setInt("animated", 0);
+    for (auto go : World::getStaticObjects())
     {
         go->render(shader);
     }
-    shader->setInt("animated", 0);
-    for (auto go : World::getStaticObjects())
+    shader->setInt("animated", 1);
+    for (auto go : World::getAnimatedObjects())
     {
         go->render(shader);
     }
@@ -95,6 +96,10 @@ void World::renderSpheres(Shader *shader)
 void World::renderWater()
 {
     water->render();
+}
+
+void World::renderCaustics(unsigned int environment){
+    water->renderCaustics(environment);
 }
 
 void World::update(float tslf)
@@ -255,8 +260,8 @@ glm::mat4 World::getLightSpaceMatrix()
     glm::mat4 lightSpaceMatrix;
 
     float near_plane = 1.0f, far_plane = 35.0f;
-    lightProjection = glm::ortho(-30.0f, 30.0f, -30.0f, 30.0f, near_plane, far_plane);
-    lightView = glm::lookAt(-10.0f * light->direction, glm::vec3(0.0f, -0.0f, 0.0f), glm::vec3(0.0, 1.0, 0.0));
+    lightProjection = glm::ortho(-18.0f, 18.0f, -18.0f, 18.0f, near_plane, far_plane);
+    lightView = glm::lookAt(-2.0f * light->direction, glm::vec3(0.0f, -0.0f, 0.0f), glm::vec3(0.0, 1.0, 0.0));
     lightSpaceMatrix = lightProjection * lightView;
 
     return lightSpaceMatrix;
@@ -285,4 +290,8 @@ DirLight *World::getDirLight()
 std::vector<PointLight *> World::getPointLight()
 {
     return plights;
+}
+
+unsigned int World::getCaustics(){
+    return water->caustics;
 }

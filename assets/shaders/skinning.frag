@@ -19,6 +19,21 @@ uniform sampler2D gPosition;
 uniform sampler2D gNormal;
 uniform sampler2D gAlbedo;
 uniform samplerCube cubeShadowMap;
+uniform sampler2D caustics;
+float causticsBias = 0.001;
+const vec2 resolution = vec2(1024.0);
+
+float blur(sampler2D image, vec2 uv, vec2 resolution, vec2 direction) {
+  float intensity = 0.0;
+  vec2 off1 = vec2(1.3846153846) * direction;
+  vec2 off2 = vec2(3.2307692308) * direction;
+  intensity += texture(image, uv).r * 0.2270270270;
+  intensity += texture(image, uv + (off1 / resolution)).r * 0.3162162162;
+  intensity += texture(image, uv - (off1 / resolution)).r * 0.3162162162;
+  intensity += texture(image, uv + (off2 / resolution)).r * 0.0702702703;
+  intensity += texture(image, uv - (off2 / resolution)).r * 0.0702702703;
+  return intensity;
+}
 
 
 struct DirLight {
@@ -199,7 +214,19 @@ void main() {
 	if(!found){
 		FragColor = vec4(all_lights, 1.0);
 	}*/
-    
+    vec3 projCoords = FragPosLightSpace.xyz / FragPosLightSpace.w;
+    projCoords = projCoords * 0.5 + 0.5;
+    float causticsDepth = texture(caustics, projCoords.xy).w;
+    if (causticsDepth > projCoords.z - causticsBias) {
+        // Percentage Close Filtering
+        float causticsIntensity = 0.5 * (
+        blur(caustics, projCoords.xy, resolution, vec2(0., 0.5)) +
+        blur(caustics, projCoords.xy, resolution, vec2(0.5, 0.))
+        );
+
+        //computedLightIntensity += causticsIntensity * smoothstep(0., 1., lightIntensity);
+        all_lights *= causticsIntensity;
+    }
     
     FragColor = vec4(all_lights, 1.0);
     // vec2 uv = vec2((gl_FragCoord.x-0.5)/800, (gl_FragCoord.y-0.5)/600);

@@ -18,6 +18,8 @@ namespace World
     void renderGameObjects(Shader *shader);
     void renderSpheres(Shader *shader);
     void renderWater();
+    void renderCaustics(unsigned int environment);
+    unsigned int getCaustics();
 
     // void renderWater(Shader *shader);
 
