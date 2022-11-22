@@ -219,13 +219,21 @@ void main() {
     float causticsDepth = texture(caustics, projCoords.xy).w;
     if (causticsDepth > projCoords.z - causticsBias) {
         // Percentage Close Filtering
-        float causticsIntensity = 0.5 * (
+        float causticsIntensityR = 0.5 * (
+        blur(caustics, projCoords.xy + vec2(2,2)*(1.0 / textureSize(shadowMap, 0)), resolution, vec2(0., 0.5)) +
+        blur(caustics, projCoords.xy + vec2(2,2)*(1.0 / textureSize(shadowMap, 0)), resolution, vec2(0.5, 0.))
+        );
+        float causticsIntensityG = 0.5 * (
         blur(caustics, projCoords.xy, resolution, vec2(0., 0.5)) +
         blur(caustics, projCoords.xy, resolution, vec2(0.5, 0.))
         );
+        float causticsIntensityB = 0.5 * (
+        blur(caustics, projCoords.xy + vec2(-2,-2)*(1.0 / textureSize(shadowMap, 0)), resolution, vec2(0., 0.5)) +
+        blur(caustics, projCoords.xy + vec2(-2,-2)*(1.0 / textureSize(shadowMap, 0)), resolution, vec2(0.5, 0.))
+        );
 
         //computedLightIntensity += causticsIntensity * smoothstep(0., 1., lightIntensity);
-        all_lights *= causticsIntensity;
+        all_lights *= vec3(causticsIntensityR, causticsIntensityG, causticsIntensityB);
     }
     
     FragColor = vec4(all_lights, 1.0);

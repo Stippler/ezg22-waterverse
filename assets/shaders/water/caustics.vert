@@ -75,7 +75,7 @@ void main() {
         // Move the coords in the direction of the refraction
         currentPosition += deltaDirection;
         currentDepth += deltaDepth;
-        currentWorldPos += refracted * 0.005;
+        currentWorldPos += refracted * 0.002;
         float d = (lightSpaceMatrix * vec4(currentWorldPos, 1.0)).z;
         //newPosition += (vec4(refracted, 1.0)*inverse(lightSpaceMatrix)).xyz/1024;
 

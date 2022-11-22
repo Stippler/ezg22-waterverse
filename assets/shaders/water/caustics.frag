@@ -18,7 +18,7 @@ uniform sampler2D tex;
 layout (location = 0) out vec4 fragColor;
 in vec2 fragTexCoord;
 
-float causticsFactor = 0.8;
+float causticsFactor = 1.0;
 
 in vec3 oldPosition;
 in vec3 newPosition;

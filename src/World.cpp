@@ -261,7 +261,7 @@ glm::mat4 World::getLightSpaceMatrix()
 
     float near_plane = 1.0f, far_plane = 35.0f;
     lightProjection = glm::ortho(-18.0f, 18.0f, -18.0f, 18.0f, near_plane, far_plane);
-    lightView = glm::lookAt(-2.0f * light->direction, glm::vec3(0.0f, -0.0f, 0.0f), glm::vec3(0.0, 1.0, 0.0));
+    lightView = glm::lookAt(-6.0f * light->direction, glm::vec3(0.0f, -0.0f, 0.0f), glm::vec3(0.0, 1.0, 0.0));
     lightSpaceMatrix = lightProjection * lightView;
 
     return lightSpaceMatrix;
