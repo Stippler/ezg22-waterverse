@@ -120,8 +120,12 @@ Water::Water(unsigned int width, unsigned int height) : width(width), height(hei
 
     unsigned int attachment[1] = {GL_COLOR_ATTACHMENT0};
     glDrawBuffers(1, attachment);
-    //glBlendEquationi(0, GL_MAX);
-    //glBlendFunci(0, GL_ONE, GL_ZERO);
+
+    unsigned int cDepth;
+    glGenRenderbuffers(1, &cDepth);
+    glBindRenderbuffer(GL_RENDERBUFFER, cDepth);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, 1024, 1024);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, cDepth);
 
     // finally check if framebuffer is complete
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
@@ -150,7 +154,7 @@ void Water::update(float tslf)
     static int ledl = 0;
 
     if(ledl%100==0 && ledl <2) {
-        addDrop(glm::vec2(0.5, 0), 0.1, 3);
+        addDrop(glm::vec2(0.5, 0.8), 0.1, 3);
         addDrop(glm::vec2(-0.5, 0), 0.1, 3);
     }
     ledl++;

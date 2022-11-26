@@ -6,7 +6,7 @@ in vec4 worldPos;
 in float depth;
 
 void main() {
-  environment = vec4(worldPos.xyz, depth);
+  environment = vec4(worldPos.xyz, gl_FragCoord.z);
   //environment = vec4(depth);
   //gl_FragColor = vec4(worldPos.xyz, depth);
 }

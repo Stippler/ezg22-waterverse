@@ -9,9 +9,9 @@ out vec3 fragPos;
 out vec3 fragNormal;
 
 out vec3 oldPosition;
-out vec3 newPosition;
+/*out vec3 newPosition;
 out float waterDepth;
-out float depth;
+out float depth;*/
 
 uniform mat4 model;
 uniform mat4 view;
@@ -19,7 +19,7 @@ uniform mat4 projection;
 uniform mat4 lightSpaceMatrix;
 
 uniform sampler2D tex;
-uniform sampler2D environment;
+//uniform sampler2D environment;
 
 float eta = 0.7504;
 int MAX_ITERATIONS = 100;
@@ -47,28 +47,28 @@ mat4 buildScaling(vec3 delta) {
 void main() {
     mat4 trans = mat4(1.0f);
 
-    float scale = 20;
+    float scale = 30;
 
     vec4 info = texture(tex, texCoord);
     float height = info.x;      
     vec3 normal =  vec3(info.z, sqrt(1.0 - dot(info.ba, info.ba)), info.w);
 
-    trans *= buildTranslation(vec3(-scale/2, height-5, -scale/2));
+    trans *= buildTranslation(vec3(-scale/2, height-5+0.8, -scale/2));
     trans *= buildScaling(vec3(scale, 1, scale));
 
     oldPosition = vec3(trans*vec4(pos, 1.0));
-    vec3 currentWorldPos = oldPosition;
+    /*vec3 currentWorldPos = oldPosition;
     vec4 projectedWaterPosition = lightSpaceMatrix * trans * vec4(pos, 1.0);
     vec2 currentPosition = projectedWaterPosition.xy;
     vec2 coords = 0.5 + 0.5 * currentPosition;
-    vec3 refracted = refract(vec3(0.01, -1.0, 0.0), normal, eta);
+    vec3 refracted = normalize(refract(vec3(0.01, -1.0, 0.0), normal, eta));
     vec4 projectedRefractionVector = lightSpaceMatrix * vec4(refracted, 1.0);
     vec3 refractedDirection = projectedRefractionVector.xyz;
     waterDepth = 0.5 + 0.5 * projectedWaterPosition.z / projectedWaterPosition.w;
     float currentDepth = projectedWaterPosition.z;
     vec4 env = texture(environment, 0.5 + 0.5 * (lightSpaceMatrix * vec4(currentWorldPos, 1.0)).xy);
-    float factor = 1/1024 / length(refractedDirection.xy);
-    //float factor = 1.0/1024.0;
+    //float factor = 1/1024 / length(refractedDirection.xy);
+    float factor = 1.0 / textureSize(environment, 0).x;
     vec2 deltaDirection = refractedDirection.xy * factor;
     float deltaDepth = refractedDirection.z * factor;
     for (int i = 0; i < MAX_ITERATIONS; i++) {
@@ -92,12 +92,12 @@ void main() {
     //newPosition = (inverse(lightSpaceMatrix)*vec4(currentPosition, currentDepth,1.0)).xyz;
     vec4 projectedEnvPosition = lightSpaceMatrix * vec4(newPosition, 1.0);
     depth = 0.5 + 0.5 * projectedEnvPosition.z / projectedEnvPosition.w;
-    gl_Position = projectedEnvPosition;
+    gl_Position = projectedEnvPosition;*/
 
 	// FragPos = vec3(model * vec4(aPos, 1.0));
     fragPos = vec3(trans*vec4(pos, 1.0));
     fragNormal = normal;
-    //gl_Position = projection * view * trans * vec4(pos, 1.0);
+    gl_Position = lightSpaceMatrix * trans * vec4(pos, 1.0);
     // fragPos = vec3(model*vec4(pos, 1.0));
     fragTexCoord = texCoord;
 }

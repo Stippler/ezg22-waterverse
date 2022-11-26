@@ -36,6 +36,7 @@ void World::init()
 
     animatedModelMap.emplace("whiteshark", new AnimatedModel("assets/models/whiteshark/WhiteShark.gltf", glm::vec3(0, 0, 1.0f)));
     animatedModelMap.emplace("fish", new AnimatedModel("assets/models/guppy-fish/Guppy.gltf", glm::vec3(0, 0, -1.0f)));
+    animatedModelMap.emplace("manta", new AnimatedModel("assets/models/manta/scene.gltf", glm::vec3(1, 0, -1.0f)));
     staticModelMap.emplace("crate", new AnimatedModel("assets/models/Crate/Crate1.obj"));
     staticModelMap.emplace("ground", new AnimatedModel("assets/models/floor/floor.obj"));
     staticModelMap.emplace("sphere", new AnimatedModel("assets/models/sphere/sphere.obj"));
@@ -43,6 +44,7 @@ void World::init()
     World::addGameObject("sphere", glm::vec3(0, 3, 0));
     auto go = World::addGameObject("whiteshark", glm::vec3(0, -8, 0));
     auto sphere = World::addGameObject("sphere", glm::vec3(0, 1, 0));
+    auto manta = World::addGameObject("manta", glm::vec3(0, -8, 5), 2.0f);
     spheres.push_back(sphere);
 
     // go->velocity = glm::vec3(-0.5f, 0.0f, -0.5f);
@@ -64,7 +66,7 @@ void World::init()
         swarm.push_back(fish);
         // go->velocity=glm::vec3(0.1f, 0.1f, 0.0f);
     }
-    World::addGameObject("crate", glm::vec3(0, 5, 0));
+    World::addGameObject("crate", glm::vec3(10, -8, 0));
     World::addGameObject("ground", glm::vec3(0, -15, 0));
 }
 
@@ -259,9 +261,9 @@ glm::mat4 World::getLightSpaceMatrix()
     glm::mat4 lightProjection, lightView;
     glm::mat4 lightSpaceMatrix;
 
-    float near_plane = 1.0f, far_plane = 35.0f;
+    float near_plane = 1.0f, far_plane = 30.0f;
     lightProjection = glm::ortho(-18.0f, 18.0f, -18.0f, 18.0f, near_plane, far_plane);
-    lightView = glm::lookAt(-6.0f * light->direction, glm::vec3(0.0f, -0.0f, 0.0f), glm::vec3(0.0, 1.0, 0.0));
+    lightView = glm::lookAt(-2.0f * light->direction, glm::vec3(0.0f, -0.0f, 0.0f), glm::vec3(0.0, 1.0, 0.0));
     lightSpaceMatrix = lightProjection * lightView;
 
     return lightSpaceMatrix;

@@ -59,6 +59,7 @@ void main() {
     // fragColor = vec4(6.0 / 255, 66.0 / 255, 115.0 / 255, 0.8);
     // fragColor = vec4(6.0 / 255, 66.0 / 255, 115.0 / 255, 1);
     vec3 color = vec3(6.0 / 255, 66.0 / 255, 115.0 / 255);
+    color = vec3(.4,.8,1);
     fragColor = vec4(allLights*color, 0.9);
     // fragColor = vec4(0, 0, 0, 1);
 }

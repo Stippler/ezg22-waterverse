@@ -122,7 +122,7 @@ void Renderer::render()
         resizeViewport=false;
     }
 
-    glClearColor(1.f, 1.f, 1.f, 1.0f);
+    glClearColor(.4f, .9f, 1.f, 1.0f);
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glDisable(GL_BLEND);

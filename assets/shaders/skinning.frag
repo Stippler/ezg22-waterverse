@@ -122,8 +122,8 @@ float ShadowCalculation(vec4 fragPosLightSpace, vec3 norm) {
     float closestDepth = texture(shadowMap, projCoords.xy).r;
     float currentDepth = projCoords.z;
     vec3 lightDir = normalize(-light.direction);
-    //float bias = max(0.05 * (1.0 - dot(norm, lightDir)), 0.005);
-    float bias = 0.05;
+    float bias = max(0.05 * (1.0 - dot(norm, light.direction)), 0.005);
+    //float bias = 0.05;
 
     float shadow = 0.0;
     vec2 texelSize = 1.0 / textureSize(shadowMap, 0);
@@ -217,7 +217,9 @@ void main() {
     vec3 projCoords = FragPosLightSpace.xyz / FragPosLightSpace.w;
     projCoords = projCoords * 0.5 + 0.5;
     float causticsDepth = texture(caustics, projCoords.xy).w;
-    if (causticsDepth > projCoords.z - causticsBias) {
+    float closestDepth = texture(shadowMap, projCoords.xy).r;
+    float currentDepth = projCoords.z;
+    if (closestDepth > currentDepth - 0.05) {
         // Percentage Close Filtering
         float causticsIntensityR = 0.5 * (
         blur(caustics, projCoords.xy + vec2(2,2)*(1.0 / textureSize(shadowMap, 0)), resolution, vec2(0., 0.5)) +
@@ -232,11 +234,11 @@ void main() {
         blur(caustics, projCoords.xy + vec2(-2,-2)*(1.0 / textureSize(shadowMap, 0)), resolution, vec2(0.5, 0.))
         );
 
-        //computedLightIntensity += causticsIntensity * smoothstep(0., 1., lightIntensity);
+        //all_lights += vec3(causticsIntensityR, causticsIntensityG, causticsIntensityB);
         all_lights *= vec3(causticsIntensityR, causticsIntensityG, causticsIntensityB);
     }
     
-    FragColor = vec4(all_lights, 1.0);
+    FragColor = vec4(vec3(0.4, 0.9, 1)*all_lights, 1.0);
     // vec2 uv = vec2((gl_FragCoord.x-0.5)/800, (gl_FragCoord.y-0.5)/600);
     // vec3 ledl = normalize(texture(gNormal, uv).rgb);
     // FragColor = vec4(ledl, 1.0);

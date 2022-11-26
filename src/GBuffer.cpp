@@ -102,6 +102,12 @@ void GBuffer::resize()
     unsigned int attachment[1] = {GL_COLOR_ATTACHMENT0};
     glDrawBuffers(1, attachment);
 
+    unsigned int envDepth;
+    glGenRenderbuffers(1, &envDepth);
+    glBindRenderbuffer(GL_RENDERBUFFER, envDepth);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, 1024, 1024);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, envDepth);
+
     // finally check if framebuffer is complete
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
     {
@@ -126,17 +132,17 @@ void GBuffer::render()
 }
 
 void GBuffer::renderEnvironment(){
+    envShader->use();
+    envShader->setMat4("lightSpaceMatrix", World::getLightSpaceMatrix());
     glViewport(0, 0, 1024, 1024);
     glBindFramebuffer(GL_FRAMEBUFFER, gEnv);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    /*glEnable(GL_CULL_FACE);
+    glEnable(GL_CULL_FACE);
     glCullFace(GL_FRONT);
-    glDisable(GL_CULL_FACE);*/
-    envShader->use();
-    envShader->setMat4("lightSpaceMatrix", World::getLightSpaceMatrix());
+    glDisable(GL_CULL_FACE);
     World::renderGameObjects(envShader);
-    //glCullFace(GL_BACK);
+    glCullFace(GL_BACK);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     // Reset viewport
