@@ -95,9 +95,9 @@ void World::renderSpheres(Shader *shader)
     }
 }
 
-void World::renderWater()
+void World::renderWater(Shader *waterShader)
 {
-    water->render();
+    water->render(waterShader);
 }
 
 void World::renderCaustics(unsigned int environment){

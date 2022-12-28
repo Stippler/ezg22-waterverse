@@ -18,4 +18,6 @@ void main()
     // gNormal = normalize(vec3(0.0,0.0,0.0));
     // and the diffuse per-fragment color
     gAlbedo = vec4(vec3(texture(texture_diffuse1, TexCoord).rgb), 1);
+
+	gl_FragDepth = gl_FragCoord.z;
 }

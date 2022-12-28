@@ -24,11 +24,15 @@
 #include "SSAO.h"
 #include "CubeMap.h"
 #include "World.h"
+#include "WaterGBuffer.h"
+#include "Quad.h"
 
 // Water
-// Water *water;
 GBuffer *gbuffer;
+WaterGBuffer *waterGBuffer;
 SSAO *ssao;
+
+Quad *quad;
 
 bool reloadShader = false;
 bool resizeViewport = false;
@@ -38,6 +42,7 @@ unsigned int modelLoc, viewLoc, projectionLoc;
 // init depth shader
 Shader *skinningShader;
 Shader *test;
+Shader *mainShader;
 
 // Shadow predefines
 // ShadowMap *shadowMap;
@@ -63,6 +68,16 @@ void Renderer::init()
     FileWatcher::add(fragmentShader5, []()
                      { reloadShader = true; });
 
+
+    const char *vertexMainShader = "assets/shaders/main.vert";
+    const char *fragmentMainShader = "assets/shaders/main.frag";
+
+    mainShader = new Shader(vertexMainShader, fragmentMainShader);
+    FileWatcher::add(vertexMainShader, []()
+                     { reloadShader = true; });
+    FileWatcher::add(fragmentMainShader, []()
+                     { reloadShader = true; });
+
     std::cout << "hello" << std::endl;
 
     // Initialise lights
@@ -79,7 +94,9 @@ void Renderer::init()
     // shadowMap = new ShadowMap();
     cubeMap = new CubeMap(World::getPointLight()[0]->position);
     gbuffer = new GBuffer();
+    waterGBuffer = new WaterGBuffer();
     ssao = new SSAO(gbuffer);
+    quad = new Quad();
 
     // Blending
     glEnable(GL_DEPTH_TEST);
@@ -106,8 +123,9 @@ void Renderer::render()
     glEnable(GL_DEPTH_TEST);
     if (reloadShader)
     {
-        std::cout << "reload ourShader" << std::endl;
+        std::cout << "reload skinning/main shaders" << std::endl;
         skinningShader->reload();
+        mainShader->reload();
         // shaderLightingPass->reload();
         // shaderSSAO->reload();
 
@@ -116,18 +134,21 @@ void Renderer::render()
     if (resizeViewport)
     {
         gbuffer->resize();
+        waterGBuffer->resize();
         ssao->resize();
         resizeViewport = false;
     }
 
-    glClearColor(.4f, .9f, 1.f, 1.0f);
+    glClearColor(.0f, .0f, 0.f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    
+
     // Render Model GBuffer
     glDisable(GL_BLEND);
     gbuffer->render();
     gbuffer->renderEnvironment();
     ssao->render();
+
+    waterGBuffer->render();
     glEnable(GL_BLEND);
 
     // Render Water GBuffer
@@ -156,22 +177,70 @@ void Renderer::render()
     // set cubemap int
     // ssaoColorBufferBlur
     // shadowMap->bindShadowMap();
-    glActiveTexture(GL_TEXTURE2); // add extra SSAO texture to lighting pass
-    glBindTexture(GL_TEXTURE_2D, gbuffer->environment);
-    glActiveTexture(GL_TEXTURE3); // add extra SSAO texture to lighting pass
-    glBindTexture(GL_TEXTURE_2D, ssao->ssaoColorBufferBlur);
-    glActiveTexture(GL_TEXTURE4);
-    glBindTexture(GL_TEXTURE_2D, gbuffer->gPosition);
-    glActiveTexture(GL_TEXTURE5);
-    glBindTexture(GL_TEXTURE_2D, gbuffer->gNormal);
-    glActiveTexture(GL_TEXTURE6);
-    glBindTexture(GL_TEXTURE_2D, gbuffer->gAlbedo);
-    glActiveTexture(GL_TEXTURE7);
-    glBindTexture(GL_TEXTURE_CUBE_MAP, cubeMap->depthCubeMap);
-    glActiveTexture(GL_TEXTURE8);
-    glBindTexture(GL_TEXTURE_2D, World::getCaustics());
+    // glActiveTexture(GL_TEXTURE2); // add extra SSAO texture to lighting pass
+    // glBindTexture(GL_TEXTURE_2D, gbuffer->environment);
+    // glActiveTexture(GL_TEXTURE3); // add extra SSAO texture to lighting pass
+    // glBindTexture(GL_TEXTURE_2D, ssao->ssaoColorBufferBlur);
+    // glActiveTexture(GL_TEXTURE4);
+    // glBindTexture(GL_TEXTURE_2D, gbuffer->gPosition);
+    // glActiveTexture(GL_TEXTURE5);
+    // glBindTexture(GL_TEXTURE_2D, gbuffer->gNormal);
+    // glActiveTexture(GL_TEXTURE6);
+    // glBindTexture(GL_TEXTURE_2D, gbuffer->gAlbedo);
+    // glActiveTexture(GL_TEXTURE7);
+    // glBindTexture(GL_TEXTURE_CUBE_MAP, cubeMap->depthCubeMap);
+    // glActiveTexture(GL_TEXTURE8);
+    // glBindTexture(GL_TEXTURE_2D, World::getCaustics());
 
     // bind cube map
-    World::renderGameObjects(skinningShader);
-    World::renderWater();
+    // World::renderGameObjects(skinningShader);
+    mainShader->use();
+    mainShader->setInt("gPosition", 0);
+    mainShader->setInt("gNormal", 1);
+    mainShader->setInt("gAlbedo", 2);
+    mainShader->setInt("gEnvironment", 3);
+
+    mainShader->setInt("gWaterPosition", 4);
+    mainShader->setInt("gWaterNormal", 5);
+    mainShader->setInt("gWaterAlbedo", 6);
+
+    mainShader->setInt("cubeShadowMap", 7);
+    mainShader->setInt("caustics", 8);
+    mainShader->setInt("ssao", 9);
+    mainShader->setInt("shadowMap", 10);
+
+
+    mainShader->setDirLight("light", World::getDirLight());
+    // mainShader->setMat4("model", model);
+    // mainShader->setInt("tex", 0);
+
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, gbuffer->gPosition);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, gbuffer->gNormal);
+    glActiveTexture(GL_TEXTURE2);
+    glBindTexture(GL_TEXTURE_2D, gbuffer->gAlbedo);
+    glActiveTexture(GL_TEXTURE3);
+    glBindTexture(GL_TEXTURE_2D, gbuffer->environment);
+
+    glActiveTexture(GL_TEXTURE4);
+    glBindTexture(GL_TEXTURE_2D, waterGBuffer->gPosition);
+    glActiveTexture(GL_TEXTURE5);
+    glBindTexture(GL_TEXTURE_2D, waterGBuffer->gNormal);
+    glActiveTexture(GL_TEXTURE6);
+    glBindTexture(GL_TEXTURE_2D, waterGBuffer->gAlbedo);
+    glActiveTexture(GL_TEXTURE7);
+
+    glActiveTexture(GL_TEXTURE7);
+    glBindTexture(GL_TEXTURE_2D, cubeMap->depthCubeMap);
+    glActiveTexture(GL_TEXTURE8);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, World::getCaustics());
+    glActiveTexture(GL_TEXTURE9);
+    glBindTexture(GL_TEXTURE_2D, ssao->ssaoColorBuffer);
+    glActiveTexture(GL_TEXTURE10);
+    glBindTexture(GL_TEXTURE_2D, gbuffer->rboDepth);
+
+    quad->render(mainShader);
+    // World::renderWater();
 }

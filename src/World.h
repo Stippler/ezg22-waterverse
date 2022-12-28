@@ -17,7 +17,7 @@ namespace World
     void update(float tslf);
     void renderGameObjects(Shader *shader);
     void renderSpheres(Shader *shader);
-    void renderWater();
+    void renderWater(Shader *shader);
     void renderCaustics(unsigned int environment);
     unsigned int getCaustics();
 

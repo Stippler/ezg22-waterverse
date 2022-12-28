@@ -30,9 +30,6 @@ Water::Water(unsigned int width, unsigned int height) : width(width), height(hei
     updateCompute = new ComputeShader("assets/shaders/water/update.comp");
     dropCompute = new ComputeShader("assets/shaders/water/drop.comp");
 
-    waterShader = new Shader("assets/shaders/water/water.vert",
-                             "assets/shaders/water/water.frag");
-
     causticsShader = new Shader("assets/shaders/water/caustics.vert",
                              "assets/shaders/water/caustics.frag");
 
@@ -46,11 +43,6 @@ Water::Water(unsigned int width, unsigned int height) : width(width), height(hei
                      { reloadCompute = true; });
     FileWatcher::add("assets/shaders/water/drop.comp", [&]()
                      { reloadCompute = true; });
-
-    FileWatcher::add("assets/shaders/water/water.vert", [&]()
-                     { reloadShader = true; });
-    FileWatcher::add("assets/shaders/water/water.frag", [&]()
-                     { reloadShader = true; });
 
     std::vector<float> vertices(height * width * 5);
     std::vector<unsigned int> indices(height * width * 2 * 3);
@@ -164,7 +156,7 @@ void Water::update(float tslf)
     updateNormals();
 }
 
-void Water::render()
+void Water::render(Shader *waterShader)
 {
     if (reloadShader)
     {

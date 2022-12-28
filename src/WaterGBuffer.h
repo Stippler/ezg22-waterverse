@@ -2,25 +2,22 @@
 
 #include "Shader.h"
 
-class GBuffer
+class WaterGBuffer
 {
 public:
     unsigned int gBuffer;
     unsigned int gPosition, gNormal, gAlbedo;
-    unsigned int gEnv, environment;
     unsigned int rboDepth;
 
-    GBuffer();
-    ~GBuffer();
+    WaterGBuffer();
+    ~WaterGBuffer();
 
     void resize();
 
     void render();
-    void renderEnvironment();
 
 private:
     bool reloadShader = false;
 
     Shader *shaderGeometryPass;
-    Shader *envShader;
 };
