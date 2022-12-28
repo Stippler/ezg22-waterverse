@@ -119,7 +119,7 @@ vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir, f
 float ShadowCalculation(vec4 fragPosLightSpace, vec3 norm) {
     vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
     projCoords = projCoords * 0.5 + 0.5;
-    float closestDepth = texture(shadowMap, projCoords.xy).r;
+    float closestDepth = texture(shadowMap, projCoords.xy).w;
     float currentDepth = projCoords.z;
     vec3 lightDir = normalize(-light.direction);
     float bias = max(0.05 * (1.0 - dot(norm, light.direction)), 0.005);
@@ -129,7 +129,7 @@ float ShadowCalculation(vec4 fragPosLightSpace, vec3 norm) {
     vec2 texelSize = 1.0 / textureSize(shadowMap, 0);
     for(int x = -1; x <= 1; ++x) {
         for(int y = -1; y <= 1; ++y) {
-            float pcfDepth = texture(shadowMap, projCoords.xy + vec2(x, y) * texelSize).r;
+            float pcfDepth = texture(shadowMap, projCoords.xy + vec2(x, y) * texelSize).w;
             shadow += currentDepth - bias > pcfDepth ? 1.0 : 0.0;
         }
     }
@@ -217,7 +217,7 @@ void main() {
     vec3 projCoords = FragPosLightSpace.xyz / FragPosLightSpace.w;
     projCoords = projCoords * 0.5 + 0.5;
     float causticsDepth = texture(caustics, projCoords.xy).w;
-    float closestDepth = texture(shadowMap, projCoords.xy).r;
+    float closestDepth = texture(shadowMap, projCoords.xy).w;
     float currentDepth = projCoords.z;
     if (closestDepth > currentDepth - 0.05) {
         // Percentage Close Filtering

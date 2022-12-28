@@ -40,7 +40,7 @@ Shader *skinningShader;
 Shader *test;
 
 // Shadow predefines
-ShadowMap *shadowMap;
+// ShadowMap *shadowMap;
 CubeMap *cubeMap;
 
 // lights predefines
@@ -48,7 +48,6 @@ Material *coral;
 
 // animation predefines
 long long StartTimeMillis = 0;
-
 
 void Renderer::init()
 {
@@ -64,10 +63,10 @@ void Renderer::init()
     FileWatcher::add(fragmentShader5, []()
                      { reloadShader = true; });
 
-    std::cout <<"hello"<<std::endl;
-    
+    std::cout << "hello" << std::endl;
+
     // Initialise lights
-    
+
     coral = new Material(glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(0.5f, 0.5f, 0.5f), 32.0f);
     glm::vec3 viewPos = Window::getCamera()->getPosition();
 
@@ -77,11 +76,11 @@ void Renderer::init()
     skinningShader->setMaterial("material", coral);
     skinningShader->setVec3("viewPos", viewPos);
 
-    shadowMap = new ShadowMap();
+    // shadowMap = new ShadowMap();
     cubeMap = new CubeMap(World::getPointLight()[0]->position);
     gbuffer = new GBuffer();
     ssao = new SSAO(gbuffer);
-    
+
     // Blending
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
@@ -108,7 +107,6 @@ void Renderer::render()
     if (reloadShader)
     {
         std::cout << "reload ourShader" << std::endl;
-
         skinningShader->reload();
         // shaderLightingPass->reload();
         // shaderSSAO->reload();
@@ -119,19 +117,22 @@ void Renderer::render()
     {
         gbuffer->resize();
         ssao->resize();
-        resizeViewport=false;
+        resizeViewport = false;
     }
 
     glClearColor(.4f, .9f, 1.f, 1.0f);
-
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    
+    // Render Model GBuffer
     glDisable(GL_BLEND);
     gbuffer->render();
     gbuffer->renderEnvironment();
     ssao->render();
     glEnable(GL_BLEND);
 
-    shadowMap->render();
+    // Render Water GBuffer
+    // TODO
+    // shadowMap->render();
     cubeMap->render();
     World::renderCaustics(gbuffer->environment);
 
@@ -152,20 +153,22 @@ void Renderer::render()
     skinningShader->setInt("cubeShadowMap", 7);
     skinningShader->setInt("caustics", 8);
 
-    //set cubemap int
+    // set cubemap int
     // ssaoColorBufferBlur
-    shadowMap->bindShadowMap();
+    // shadowMap->bindShadowMap();
+    glActiveTexture(GL_TEXTURE2); // add extra SSAO texture to lighting pass
+    glBindTexture(GL_TEXTURE_2D, gbuffer->environment);
     glActiveTexture(GL_TEXTURE3); // add extra SSAO texture to lighting pass
     glBindTexture(GL_TEXTURE_2D, ssao->ssaoColorBufferBlur);
-    glActiveTexture(GL_TEXTURE4); 
+    glActiveTexture(GL_TEXTURE4);
     glBindTexture(GL_TEXTURE_2D, gbuffer->gPosition);
-    glActiveTexture(GL_TEXTURE5); 
+    glActiveTexture(GL_TEXTURE5);
     glBindTexture(GL_TEXTURE_2D, gbuffer->gNormal);
-    glActiveTexture(GL_TEXTURE6); 
+    glActiveTexture(GL_TEXTURE6);
     glBindTexture(GL_TEXTURE_2D, gbuffer->gAlbedo);
-    glActiveTexture(GL_TEXTURE7); 
+    glActiveTexture(GL_TEXTURE7);
     glBindTexture(GL_TEXTURE_CUBE_MAP, cubeMap->depthCubeMap);
-    glActiveTexture(GL_TEXTURE8); 
+    glActiveTexture(GL_TEXTURE8);
     glBindTexture(GL_TEXTURE_2D, World::getCaustics());
 
     // bind cube map
