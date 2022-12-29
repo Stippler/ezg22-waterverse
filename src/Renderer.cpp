@@ -209,8 +209,13 @@ void Renderer::render()
     mainShader->setInt("ssao", 9);
     mainShader->setInt("shadowMap", 10);
 
-
     mainShader->setDirLight("light", World::getDirLight());
+    mainShader->setMaterial("material", coral);
+    mainShader->setMat4("lightSpaceMatrix", World::getLightSpaceMatrix());
+
+    Window::setScreenSize(mainShader);
+    glm::vec3 viewPos = Window::getCamera()->getPosition();
+    mainShader->setVec3("viewPos", viewPos);
     // mainShader->setMat4("model", model);
     // mainShader->setInt("tex", 0);
 
