@@ -9,6 +9,9 @@ uniform sampler2D gPosition;
 uniform sampler2D gNormal;
 uniform sampler2D texNoise;
 
+uniform mat4 view;
+uniform vec3 viewPos;
+
 uniform vec3 samples[64];
 
 // parameters (you'd probably want to use them as uniforms to more easily tweak the effect)
@@ -27,6 +30,7 @@ uniform mat4 projection;
 void main()
 {
     // get input for SSAO algorithm
+    //vec3 fragPos = (view*vec4(texture(gPosition, TexCoord).xyz,1.0)).xyz;
     vec3 fragPos = texture(gPosition, TexCoord).xyz;
     //vec3 fragPos = FragPos;
     vec3 normal = normalize(texture(gNormal, TexCoord).rgb);
@@ -60,5 +64,5 @@ void main()
     occlusion = 1.0 - (occlusion / kernelSize);
     
     // FragColor = occlusion;
-    FragColor = pow(occlusion, 2);
+    FragColor = pow(occlusion, 3);
 }

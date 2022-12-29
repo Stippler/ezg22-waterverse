@@ -124,13 +124,15 @@ void SSAO::render()
     shaderSSAO->setInt("gPosition", 0);
     shaderSSAO->setInt("gNormal", 1);
     shaderSSAO->setInt("texNoise", 2);
-
+    Window::setMatrices(shaderSSAO);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, gbuffer->gPosition);
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, gbuffer->gNormal);
     glActiveTexture(GL_TEXTURE2);
     glBindTexture(GL_TEXTURE_2D, noiseTexture);
+
+    
 
     renderQuad();
     glBindFramebuffer(GL_FRAMEBUFFER, 0);

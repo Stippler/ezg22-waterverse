@@ -42,6 +42,8 @@ uniform samplerCube cubeShadowMap;
 
 // Caustics
 uniform sampler2D caustics;
+float causticsBias = 1;
+const vec2 resolution = vec2(1024.0);
 
 // ssao
 uniform sampler2D ssao;
@@ -55,6 +57,9 @@ uniform sampler2D gWaterNormal;
 uniform sampler2D gWaterAlbedo;
 
 uniform vec2 screenSize;
+
+uniform mat4 view;
+uniform mat4 projection;
 
 // Blur for Caustics
 float blur(sampler2D image, vec2 uv, vec2 resolution, vec2 direction) {
@@ -74,7 +79,7 @@ float AmbientOcclusion = texture(ssao, vec2(gl_FragCoord.x-0.5, gl_FragCoord.y-0
 vec3 calcDirLight(DirLight light, vec3 normal, vec3 viewDir, vec3 albedo,float shadow) {
     // float materialAmbient = 0.8;
     float materialShininess = 32;
-    vec3 lightDir = normalize(-vec3(0.0, -1.0, 0));
+    vec3 lightDir = normalize(-light.direction);
 
     // diffuse shading
     float diff = max(dot(normal, lightDir), 0.0);
@@ -86,9 +91,9 @@ vec3 calcDirLight(DirLight light, vec3 normal, vec3 viewDir, vec3 albedo,float s
     // combine results
     vec3 res = vec3(0, 0, 0);
 
-    vec3 ambient = light.ambient; // * AmbientOcclusion;
+    vec3 ambient = light.ambient * albedo * AmbientOcclusion; // * AmbientOcclusion;
     vec3 diffuse = light.diffuse * diff * albedo;
-    vec3 specular = light.specular * spec;
+    vec3 specular = light.specular * spec * albedo;
     res += ambient;
     res += (1.0 - shadow) * diffuse;
     res += specular;
@@ -96,7 +101,7 @@ vec3 calcDirLight(DirLight light, vec3 normal, vec3 viewDir, vec3 albedo,float s
 }
 
 vec3 calcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir, vec3 albedo, float shadow) {
-    float materialShininess = 3;
+    float materialShininess = 32;
     vec3 lightDir = normalize(light.position - fragPos);
     // diffuse shading
     float diff = max(dot(normal, lightDir), 0.0);
@@ -110,7 +115,7 @@ vec3 calcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir, v
     // combine results
     vec3 ambient = light.ambient * albedo * AmbientOcclusion;
     vec3 diffuse = light.diffuse * diff * albedo;
-    vec3 specular = light.specular * spec;
+    vec3 specular = light.specular * spec * albedo;
     ambient *= attenuation;
     diffuse *= attenuation;
     specular *= attenuation;
@@ -175,7 +180,7 @@ float shadowCalculationPointLight(vec3 fragPos, PointLight light)
 }  
 
 void main() {
-    vec4 modelPos = texture(gPosition, texCoords);
+    vec4 modelPos = inverse(view)*texture(gPosition, texCoords);
     vec4 modelNormal = texture(gNormal, texCoords);
     vec4 modelAlbedo = texture(gAlbedo, texCoords);
 
@@ -192,10 +197,10 @@ void main() {
 
     vec3 model_light = vec3(0, 0, 0);
     vec3 viewDir = normalize(viewPos - modelPos.xyz);
-    vec4 fragPosLightSpace = lightSpaceMatrix * modelPos;
+    vec4 fragPosLightSpace = lightSpaceMatrix * vec4(modelPos.xyz,1.0);
     float shadow = shadowCalculation(fragPosLightSpace, modelNormal.xyz);
     model_light += calcDirLight(light, modelNormal.xyz, viewDir, modelAlbedo.xyz, shadow);
-    fragColor = vec4(model_light, 1); // (waterAlbedo + modelAlbedo) / 2;
+    
     for(int i = 0; i<NR_POINT_LIGHTS; i++){
         float shadowpl = shadowCalculationPointLight(modelPos.xyz, plight[i]);
         model_light += calcPointLight(plight[i], modelNormal.xyz, modelPos.xyz, viewDir, modelAlbedo.xyz, shadowpl);
@@ -203,6 +208,34 @@ void main() {
         shadowpl = shadowCalculationPointLight(waterPos.xyz, plight[i]);
         waterLight += calcPointLight(plight[i], waterNormal.xyz, waterPos.xyz, viewDir, waterAlbedo.xyz, shadowpl);
     }
+
+    
+    vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
+    projCoords = projCoords * 0.5 + 0.5;
+    float causticsDepth = texture(caustics, projCoords.xy).w;
+    float closestDepth = texture(shadowMap, projCoords.xy).w;
+    float currentDepth = projCoords.z;
+    if (closestDepth > currentDepth - causticsBias) {
+        // Percentage Close Filtering
+        float causticsIntensityR = 0.5 * (
+        blur(caustics, projCoords.xy + vec2(2,2)*(1.0 / textureSize(shadowMap, 0)), resolution, vec2(0., 0.5)) +
+        blur(caustics, projCoords.xy + vec2(2,2)*(1.0 / textureSize(shadowMap, 0)), resolution, vec2(0.5, 0.))
+        );
+        float causticsIntensityG = 0.5 * (
+        blur(caustics, projCoords.xy, resolution, vec2(0., 0.5)) +
+        blur(caustics, projCoords.xy, resolution, vec2(0.5, 0.))
+        );
+        float causticsIntensityB = 0.5 * (
+        blur(caustics, projCoords.xy + vec2(-2,-2)*(1.0 / textureSize(shadowMap, 0)), resolution, vec2(0., 0.5)) +
+        blur(caustics, projCoords.xy + vec2(-2,-2)*(1.0 / textureSize(shadowMap, 0)), resolution, vec2(0.5, 0.))
+        );
+
+        //all_lights += vec3(causticsIntensityR, causticsIntensityG, causticsIntensityB);
+        model_light *= vec3(causticsIntensityR, causticsIntensityG, causticsIntensityB);
+    }
+
+    fragColor = vec4(model_light + waterLight, 1); // (waterAlbedo + modelAlbedo) / 2;
+
 
     // vec4 dirShadow = texture(shadowMap, texCoords); HOW?
     // fragColor = vec4(ssao, ssao, ssao, 1);

@@ -212,10 +212,12 @@ void Renderer::render()
     mainShader->setDirLight("light", World::getDirLight());
     mainShader->setMaterial("material", coral);
     mainShader->setMat4("lightSpaceMatrix", World::getLightSpaceMatrix());
+    mainShader->setPointLight("plight", World::getPointLight());
 
     Window::setScreenSize(mainShader);
     glm::vec3 viewPos = Window::getCamera()->getPosition();
     mainShader->setVec3("viewPos", viewPos);
+    Window::setMatrices(mainShader);
     // mainShader->setMat4("model", model);
     // mainShader->setInt("tex", 0);
 
@@ -238,13 +240,13 @@ void Renderer::render()
     glActiveTexture(GL_TEXTURE7);
 
     glActiveTexture(GL_TEXTURE7);
-    glBindTexture(GL_TEXTURE_2D, cubeMap->depthCubeMap);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, cubeMap->depthCubeMap);
     glActiveTexture(GL_TEXTURE8);
-    glBindTexture(GL_TEXTURE_CUBE_MAP, World::getCaustics());
+    glBindTexture(GL_TEXTURE_2D, World::getCaustics());
     glActiveTexture(GL_TEXTURE9);
     glBindTexture(GL_TEXTURE_2D, ssao->ssaoColorBuffer);
     glActiveTexture(GL_TEXTURE10);
-    glBindTexture(GL_TEXTURE_2D, gbuffer->rboDepth);
+    glBindTexture(GL_TEXTURE_2D, gbuffer->environment);
 
     quad->render(mainShader);
     // World::renderWater();
