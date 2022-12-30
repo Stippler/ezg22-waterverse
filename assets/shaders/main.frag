@@ -74,7 +74,7 @@ float blur(sampler2D image, vec2 uv, vec2 resolution, vec2 direction) {
     return intensity;
 }
 
-float AmbientOcclusion = texture(ssao, vec2(gl_FragCoord.x - 0.5, gl_FragCoord.y - 0.5) / screenSize).r;
+float ambientOcclusion = texture(ssao, vec2(gl_FragCoord.x - 0.5, gl_FragCoord.y - 0.5) / screenSize).r;
 
 vec3 calcDirLight(DirLight light, vec3 normal, vec3 viewDir, vec3 albedo, float shadow) {
     // float materialAmbient = 0.8;
@@ -91,7 +91,7 @@ vec3 calcDirLight(DirLight light, vec3 normal, vec3 viewDir, vec3 albedo, float 
     // combine results
     vec3 res = vec3(0, 0, 0);
 
-    vec3 ambient = light.ambient * albedo * AmbientOcclusion; // * AmbientOcclusion;
+    vec3 ambient = light.ambient * albedo * ambientOcclusion; // * AmbientOcclusion;
     vec3 diffuse = light.diffuse * diff * albedo;
     vec3 specular = light.specular * spec * albedo;
     res += ambient;
@@ -113,7 +113,7 @@ vec3 calcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir, v
     float attenuation = 1.0 / (light.constant + light.linear * distance +
         light.quadratic * (distance * distance));    
     // combine results
-    vec3 ambient = light.ambient * albedo * AmbientOcclusion;
+    vec3 ambient = light.ambient * albedo * ambientOcclusion;
     vec3 diffuse = light.diffuse * diff * albedo;
     vec3 specular = light.specular * spec * albedo;
     ambient *= attenuation;
@@ -148,25 +148,6 @@ float shadowCalculation(vec4 fragPosLightSpace, vec3 norm) {
     return shadow;
 }
 
-bool inCube(vec3 pos) {
-    float size = 5;
-    vec3 bottomLeft = vec3(-size);
-    vec3 topRight = vec3(size);
-    vec3 s = step(bottomLeft, pos) - step(topRight, pos);
-    return s.x * s.y * s.z;
-}
-
-vec3 rayMarching(vec3 start, vec3 end, int numSamples) {
-    float cubeAmount=0;
-    for(int i = 0; i < numSamples; i++) {
-        float numSampleFloat = float(numSamples);
-        float iFloat = float(i);
-        float t = iFloat / numSampleFloat;
-        vec3 pos = t * start + (1 - t) * end;
-        cubeAmount+=inCube(pos);
-    }
-}
-
 // array of offset direction for sampling
 vec3 gridSamplingDisk[20] = vec3[](vec3(1, 1, 1), vec3(1, -1, 1), vec3(-1, -1, 1), vec3(-1, 1, 1), vec3(1, 1, -1), vec3(1, -1, -1), vec3(-1, -1, -1), vec3(-1, 1, -1), vec3(1, 1, 0), vec3(1, -1, 0), vec3(-1, -1, 0), vec3(-1, 1, 0), vec3(1, 0, 1), vec3(-1, 0, 1), vec3(1, 0, -1), vec3(-1, 0, -1), vec3(0, 1, 1), vec3(0, -1, 1), vec3(0, -1, -1), vec3(0, 1, -1));
 
@@ -189,8 +170,95 @@ float shadowCalculationPointLight(vec3 fragPos, PointLight light) {
     return shadow;
 }
 
+float inCube(vec3 pos) {
+    float size = 5;
+    vec3 bottomLeft = vec3(-size);
+    vec3 topRight = vec3(size);
+    vec3 s = step(bottomLeft, pos) - step(topRight, pos);
+    return s.x * s.y * s.z;
+}
+
+vec3 rayMarching(vec3 viewPos, vec3 modelPos) {
+    vec3 dir = modelPos - viewPos;
+    float size = length(dir);
+    if(abs(size) < 0.00001) {
+        size = farPlane;
+    } else {
+        dir /= size;
+    }
+
+    // vec3 pos = viewPos;
+    // float cubeCount = 0;
+    // for(int i = 0; i < numSamples; i++) {
+    //     // float numSampleFloat = float(numSamples);
+    //     // float iFloat = float(i);
+    //     // float t = iFloat / numSampleFloat;
+    //     // vec3 pos = t * start + (1 - t) * end;
+    //     pos += dir;
+    //     cubeCount += inCube(pos);
+    // }
+    // float cubeFrac = cubeCount / numSamples;
+    // vec3 color = vec3(0.73f, 0.73f, 1.0f) * cubeFrac;
+    return vec3(size, size, size);
+}
+
+// this is supposed to get the world position from the depth buffer
+// vec3 worldPosFromDepth(float depth) {
+//     float z = depth * 2.0 - 1.0;
+// 
+//     vec4 clipSpacePosition = vec4(TexCoord * 2.0 - 1.0, z, 1.0);
+//     vec4 viewSpacePosition = projMatrixInv * clipSpacePosition;
+// 
+//     // Perspective division
+//     viewSpacePosition /= viewSpacePosition.w;
+// 
+//     vec4 worldSpacePosition = viewMatrixInv * viewSpacePosition;
+// 
+//     return worldSpacePosition.xyz;
+// }
+
+// This assumes the pixel position px to be in [0,1],
+// which can be done by (x+0.5)/w or (y+0.5)/h (or h-y +0.5 for screens
+// with top left origin) to sample pixel centers
+vec3 createRay(vec2 px, mat4 PInv, mat4 VInv)
+{
+  
+    // convert pixel to NDS
+    // [0,1] -> [-1,1]
+    vec2 pxNDS = px*2. - 1.;
+
+    // choose an arbitrary point in the viewing volume
+    // z = -1 equals a point on the near plane, i.e. the screen
+    vec3 pointNDS = vec3(pxNDS, -1.);
+
+    // as this is in homogenous space, add the last homogenous coordinate
+    vec4 pointNDSH = vec4(pointNDS, 1.0);
+    // transform by inverse projection to get the point in view space
+    vec4 dirEye = PInv * pointNDSH;
+
+    // since the camera is at the origin in view space by definition,
+    // the current point is already the correct direction 
+    // (dir(0,P) = P - 0 = P as a direction, an infinite point,
+    // the homogenous component becomes 0 the scaling done by the 
+    // w-division is not of interest, as the direction in xyz will 
+    // stay the same and we can just normalize it later
+    dirEye.w = 0.;
+
+    // compute world ray direction by multiplying the inverse view matrix
+    vec3 dirWorld = (VInv * dirEye).xyz;
+
+    // now normalize direction
+    return normalize(dirWorld); 
+}
+
 void main() {
-    vec4 modelPos = inverse(view) * texture(gPosition, texCoords);
+    // TODO: calculate once outside of shader:
+    mat4 vInv = inverse(view);
+    mat4 pInv = inverse(projection);
+    // vec2 px = texCoords*2-vec2(1, 1);
+    vec3 ray = createRay(texCoords, pInv, vInv);
+
+    vec4 modelPos = vInv * texture(gPosition, texCoords);
     vec4 modelNormal = texture(gNormal, texCoords);
     vec4 modelAlbedo = texture(gAlbedo, texCoords);
 
@@ -237,7 +305,36 @@ void main() {
         model_light *= vec3(causticsIntensityR, causticsIntensityG, causticsIntensityB);
     }
 
-    fragColor = vec4(model_light + waterLight, 1); // (waterAlbedo + modelAlbedo) / 2;
+    // fragColor = vec4(ledl, 0, 0, 1);
+    // if(all(equal(vec4(0.0,0.0,0.0,1.0), modelPos))){
+    //     x=1;
+    // }
+    // else {
+    //     x=0;
+    // }
+    // fragColor = vec4(x, x, x, 1);
+    // fragColor = modelPos;
+    // vec3 volumeColor = rayMarching(viewPos, modelPos.xyz);
+    // fragColor = vec4(volumeColor, 1);
+    float size;
+    if(modelNormal == vec4(0, 0, 0, 1)) {
+        size = farPlane;
+    } else {
+        size = length(modelPos.xyz - viewPos);
+    }
+    vec3 curPos = viewPos;
+    float numSamples = 1000;
+    float cubeCount = 0;
+    for(int i = 0; i < numSamples; i++) {
+        curPos += ray*50*1/numSamples;
+        cubeCount += inCube(curPos);
+    }
+    float cubeFrac = cubeCount/200;
+    vec3 cubeColor = vec3(cubeFrac, cubeFrac, cubeFrac);
+    // fragColor = vec4(cubeCount, cubeCount, cubeCount, 1);
+    // fragColor = vec4(size, size, size, 1);
+    fragColor = vec4(model_light + waterLight-cubeColor, 1);
+    // (waterAlbedo + modelAlbedo) / 2;
 
     // vec4 dirShadow = texture(shadowMap, texCoords); HOW?
     // fragColor = vec4(ssao, ssao, ssao, 1);
