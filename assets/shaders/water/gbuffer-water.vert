@@ -36,13 +36,13 @@ mat4 buildScaling(vec3 delta) {
 void main() {
     mat4 trans = mat4(1.0f);
 
-    float scale = 20;
+    float scale = 30;
 
     vec4 info = texture(tex, texCoord);
     float height = info.x;      
     fragNormal =  vec3(info.z, sqrt(1.0 - dot(info.ba, info.ba)), info.w);
 
-    trans *= buildTranslation(vec3(-scale/2, height-5, -scale/2));
+    trans *= buildTranslation(vec3(-scale/2, height+15, -scale/2));
     trans *= buildScaling(vec3(scale, 1, scale));
 
     fragPos = vec3(trans*vec4(pos, 1.0));

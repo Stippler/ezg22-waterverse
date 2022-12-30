@@ -171,7 +171,7 @@ float shadowCalculationPointLight(vec3 fragPos, PointLight light) {
 }
 
 float inCube(vec3 pos) {
-    float size = 5;
+    float size = 15;
     vec3 bottomLeft = vec3(-size);
     vec3 topRight = vec3(size);
     vec3 s = step(bottomLeft, pos) - step(topRight, pos);
@@ -305,38 +305,44 @@ void main() {
         model_light *= vec3(causticsIntensityR, causticsIntensityG, causticsIntensityB);
     }
 
-    // fragColor = vec4(ledl, 0, 0, 1);
-    // if(all(equal(vec4(0.0,0.0,0.0,1.0), modelPos))){
-    //     x=1;
-    // }
-    // else {
-    //     x=0;
-    // }
-    // fragColor = vec4(x, x, x, 1);
-    // fragColor = modelPos;
-    // vec3 volumeColor = rayMarching(viewPos, modelPos.xyz);
-    // fragColor = vec4(volumeColor, 1);
-    float size;
+    float maxRaySize = 100;
+    float rayLength;
     if(modelNormal == vec4(0, 0, 0, 1)) {
-        size = farPlane;
+        rayLength = maxRaySize;
+        model_light = vec3(1.0);
     } else {
-        size = length(modelPos.xyz - viewPos);
+        rayLength = length(modelPos.xyz - viewPos);
     }
-    vec3 curPos = viewPos;
-    float numSamples = 1000;
-    float cubeCount = 0;
-    for(int i = 0; i < numSamples; i++) {
-        curPos += ray*50*1/numSamples;
-        cubeCount += inCube(curPos);
-    }
-    float cubeFrac = cubeCount/200;
-    vec3 cubeColor = vec3(cubeFrac, cubeFrac, cubeFrac);
-    // fragColor = vec4(cubeCount, cubeCount, cubeCount, 1);
-    // fragColor = vec4(size, size, size, 1);
-    fragColor = vec4(model_light + waterLight-cubeColor, 1);
-    // (waterAlbedo + modelAlbedo) / 2;
 
-    // vec4 dirShadow = texture(shadowMap, texCoords); HOW?
+    vec3 curPos = viewPos;
+    float numSamples = 1000*(rayLength/maxRaySize);
+    float cubeCount = 0;
+    float shadowCount = 0;
+    float lightCount = 0;
+    float stepSize = maxRaySize/numSamples;
+    for(int i = 0; i < numSamples; i++) {
+        curPos = viewPos+i*ray*stepSize;
+        cubeCount += inCube(curPos);
+        vec4 curPosLightSpace = lightSpaceMatrix*vec4(curPos, 1.0);
+        vec3 currProj = curPosLightSpace.xyz / curPosLightSpace.w;
+        currProj = currProj * 0.5 + 0.5;
+        float closestDepth = texture(shadowMap, currProj.xy).w;
+        float currDepth = currProj.z;
+        if(currDepth-0.01 > closestDepth) {
+            //we are in shadow
+            shadowCount+=1.0;
+            lightCount+=1.0;
+        }
+    }
+    float cubeFrac = cubeCount/1000;
+    float shadowFrac = shadowCount/800;
+    float lightFrac = lightCount/numSamples;
+    vec3 cubeColor = vec3(cubeFrac, cubeFrac/2, cubeFrac/3);
+    fragColor = vec4(model_light-cubeColor, 1);
+    // fragColor = vec4(waterLight, 1);
+    // fragColor = vec4(cubeColor, 1);
+
+    // vec4 dirShadow = texture(shadowMap, texCoords);
     // fragColor = vec4(ssao, ssao, ssao, 1);
     // fragColor = modelNormal;
 }
