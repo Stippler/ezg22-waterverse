@@ -28,6 +28,18 @@ void mouseMoveCallback(GLFWwindow *window, double xpos, double ypos)
     }
 }
 
+void keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods)
+{
+    if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
+    {
+        glm::vec3 pos = camera->getPosition();
+        float yaw = camera->yaw;
+        float pitch = camera->pitch;
+        std::cout << pos.x << " " << pos.y << " " << pos.z << std::endl;
+        std::cout << yaw << " " << pitch << std::endl;
+    }
+}
+
 void mouseButtonCallback(GLFWwindow *window, int button, int action, int mods)
 {
     int state = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT);
@@ -53,8 +65,8 @@ void mouseButtonCallback(GLFWwindow *window, int button, int action, int mods)
 
 void framebufferSizeCallback(GLFWwindow *window, int newWidth, int newHeight)
 {
-    width=newWidth;
-    height=newHeight;
+    width = newWidth;
+    height = newHeight;
     glViewport(0, 0, width, height);
     Renderer::resize();
 }
@@ -89,14 +101,26 @@ void Window::processInput()
     // throttle to 30 fps
     if (deltaTime > 1.0f / 30.0f)
     {
-        //std::cout << "Info: input polled less than 30 times per second" << std::endl;
+        // std::cout << "Info: input polled less than 30 times per second" << std::endl;
         deltaTime = 1.0f / 30.0f;
     }
 
     if (camera)
     {
         auto glfWwindow = window;
-        // TODO handle input for camera
+        // if (glfwGetKey(glfWwindow, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
+        // {
+        //     std::cout << "break" <<
+        // }
+
+        if (glfwGetKey(glfWwindow, GLFW_KEY_RIGHT_CONTROL) == GLFW_PRESS)
+        {
+            camera->setAuto(true);
+        }
+        else
+        {
+            camera->setAuto(false);
+        }
         if (glfwGetKey(glfWwindow, GLFW_KEY_W) == GLFW_PRESS)
         {
             camera->moveForward(deltaTime);
@@ -190,6 +214,7 @@ void Window::init()
     glfwMakeContextCurrent(window);
 
     glfwSetMouseButtonCallback(window, mouseButtonCallback);
+    glfwSetKeyCallback(window, keyCallback);
     glfwSetCursorPosCallback(window, mouseMoveCallback);
 
     // set viewport

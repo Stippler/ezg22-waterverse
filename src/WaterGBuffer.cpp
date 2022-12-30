@@ -43,7 +43,6 @@ void WaterGBuffer::resize()
     }
     float width = Window::getWidth();
     float height = Window::getHeight();
-    std::cout << "Resizing GBuffer with: {" << width << ", " << height << "}" << std::endl;
     // ssao
     glGenFramebuffers(1, &gBuffer);
     glBindFramebuffer(GL_FRAMEBUFFER, gBuffer);

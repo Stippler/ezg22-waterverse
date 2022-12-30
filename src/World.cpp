@@ -106,6 +106,7 @@ void World::renderCaustics(unsigned int environment){
 
 void World::update(float tslf)
 {
+    Window::getCamera()->update(tslf);
     for (auto sphere : spheres)
     {
         // TODO: update sphere

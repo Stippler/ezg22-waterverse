@@ -1,4 +1,5 @@
 #include "Camera.h"
+#include "FileWatcher.h"
 
 Camera::Camera(float posX, float posY, float posZ)
 {
@@ -8,17 +9,40 @@ Camera::Camera(float posX, float posY, float posZ)
     yaw = -0.0f;
     pitch = -0.0f;
 
+    movement = new CameraMovement();
+    movement->reload();
+    FileWatcher::add("assets/camera.txt", [&]
+                     { reloadMovement = true; });
     updateAngle();
+}
+
+Camera::~Camera()
+{
+    delete movement;
 }
 
 glm::mat4 Camera::getViewMatrix() const
 {
-    return glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
+    if (automatic)
+    {
+        return glm::lookAt(cameraPosAuto, cameraPosAuto + cameraFrontAuto, cameraUpAuto);
+    }
+    else
+    {
+        return glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
+    }
 }
 
 glm::vec3 Camera::getPosition() const
 {
-    return cameraPos;
+    if (automatic)
+    {
+        return cameraPosAuto;
+    }
+    else
+    {
+        return cameraPos;
+    }
 }
 
 void Camera::moveForward(float deltaTime)
@@ -58,7 +82,8 @@ void Camera::moveDown(float deltaTime)
     cameraPos -= worldUp * velocity;
 }
 
-void Camera::updateAngle() {
+void Camera::updateAngle()
+{
     // calculate the new Front vector
     glm::vec3 newFront;
     newFront.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
@@ -69,6 +94,16 @@ void Camera::updateAngle() {
     // normalize the vectors, because their length gets closer to 0 the more you look up or down which results in slower movement.
     glm::vec3 cameraRight = glm::normalize(glm::cross(cameraFront, worldUp));
     cameraUp = glm::normalize(glm::cross(cameraRight, cameraFront));
+
+    glm::vec3 newFrontAuto;
+    newFrontAuto.x = cos(glm::radians(yawAuto)) * cos(glm::radians(pitchAuto));
+    newFrontAuto.y = sin(glm::radians(pitchAuto));
+    newFrontAuto.z = sin(glm::radians(yawAuto)) * cos(glm::radians(pitchAuto));
+    cameraFrontAuto = glm::normalize(newFrontAuto);
+    // also re-calculate the Right and Up vector
+    // normalize the vectors, because their length gets closer to 0 the more you look up or down which results in slower movement.
+    glm::vec3 cameraRightAuto = glm::normalize(glm::cross(cameraFrontAuto, worldUp));
+    cameraUpAuto = glm::normalize(glm::cross(cameraRight, cameraFrontAuto));
 }
 
 void Camera::processMouseMovement(float xoffset, float yoffset)
@@ -89,5 +124,24 @@ void Camera::processMouseMovement(float xoffset, float yoffset)
         pitch = -89.0f;
     }
 
+    updateAngle();
+}
+
+void Camera::setAuto(bool mode)
+{
+    automatic = mode;
+}
+
+void Camera::update(float tslf)
+{
+    if (reloadMovement)
+    {
+        movement->reload();
+    }
+    time += tslf;
+    CameraPos pos = movement->getPos(time);
+    yawAuto = pos.yaw;
+    pitchAuto = pos.pitch;
+    cameraPosAuto = pos.pos;
     updateAngle();
 }
