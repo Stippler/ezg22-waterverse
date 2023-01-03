@@ -222,7 +222,7 @@ private:
 
     float mouseSensitivity = 0.3f;
 
-    float movementSpeed = 5.0f;
+    float movementSpeed = 30.0f;
 
     float time=0.0f;
     bool automatic = false;

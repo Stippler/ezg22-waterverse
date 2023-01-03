@@ -309,7 +309,6 @@ void main() {
     float rayLength;
     if(modelNormal == vec4(0, 0, 0, 1)) {
         rayLength = maxRaySize;
-        model_light = vec3(1.0);
     } else {
         rayLength = length(modelPos.xyz - viewPos);
     }
@@ -334,11 +333,11 @@ void main() {
             lightCount+=1.0;
         }
     }
-    float cubeFrac = cubeCount/1000;
-    float shadowFrac = shadowCount/800;
+    float cubeFrac = cubeCount/300;
+    float shadowFrac = shadowCount/1000;
     float lightFrac = lightCount/numSamples;
     vec3 cubeColor = vec3(cubeFrac, cubeFrac/2, cubeFrac/3);
-    fragColor = vec4(model_light-cubeColor, 1);
+    fragColor = vec4(model_light-cubeColor+waterLight, 1);
     // fragColor = vec4(waterLight, 1);
     // fragColor = vec4(cubeColor, 1);
 

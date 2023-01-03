@@ -145,13 +145,13 @@ void Water::update(float tslf)
     }
     static int ledl = 0;
 
-    if(ledl%100==0 && ledl <2) {
-        addDrop(glm::vec2(0.5, 0.8), 0.1, 3);
-        addDrop(glm::vec2(-0.5, 0), 0.1, 3);
+    if(ledl%500==0 && ledl <2) {
+        addDrop(glm::vec2(0.5, 0.8), 0.1, 10);
+        // addDrop(glm::vec2(-0.5, 0), 0.1, 2);
     }
     ledl++;
 
-    stepSimulation();
+    // stepSimulation();
     stepSimulation();
     updateNormals();
 }
