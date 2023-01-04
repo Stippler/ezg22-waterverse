@@ -130,6 +130,7 @@ struct CameraMovement
             curves.push_back(curve);
             times.push_back(time);
         }
+        file.close();
         this->curves.assign(curves.begin(), curves.end());
         this->times.assign(times.begin(), times.end());
     }

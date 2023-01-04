@@ -8,6 +8,7 @@
 #include "AnimatedModel.h"
 #include "Window.h"
 #include "Water.h"
+#include "FileWatcher.h"
 
 std::vector<GameObject *> animatedObjects;
 std::vector<GameObject *> staticObjects;
@@ -21,11 +22,34 @@ std::vector<GameObject *> swarm;
 std::vector<GameObject *> spheres;
 Water *water;
 
+// Swarm update:
+float collision_radius = 1.0f;
+float view_radius = 5.0f;
+float center_radius = 12.0f;
+
+float collision_influence = 0.7f;
+float velocity_influence = 0.15f;
+float position_influence = 0.15f;
+float center_influence = 1.0f;
+
+float acceleration = 5.0f;
+float max_speed = 5.0f;
+
+int swarm_size = 50;
+bool reload_world = false;
+
 // std::vector<AnimatedModel *> models;
 // std::vector<Cube*> cubes;
 
 void World::init()
 {
+    animatedModelMap.emplace("whiteshark", new AnimatedModel("assets/models/whiteshark/WhiteShark.gltf", glm::vec3(0, 0, 1.0f)));
+    animatedModelMap.emplace("fish", new AnimatedModel("assets/models/guppy-fish/Guppy.gltf", glm::vec3(0, 0, -1.0f)));
+    animatedModelMap.emplace("manta", new AnimatedModel("assets/models/manta/scene.gltf", glm::vec3(1, 0, -1.0f)));
+    staticModelMap.emplace("crate", new AnimatedModel("assets/models/Crate/Crate1.obj"));
+    staticModelMap.emplace("ground", new AnimatedModel("assets/models/floor/floor.obj"));
+    staticModelMap.emplace("sphere", new AnimatedModel("assets/models/sphere/sphere.obj"));
+
     water = new Water();
     light = new DirLight(glm::vec3(0.01f, -1.0f, 0.0f), glm::vec3(0.2f, 0.2f, 0.2f), glm::vec3(0.5f, 0.5f, 0.5f), glm::vec3(1.0f, 1.0f, 1.0f));
 
@@ -34,37 +58,93 @@ void World::init()
     // plights.push_back(new PointLight(glm::vec3(3.0f, -8.0f, 0.0f), glm::vec3(0.2f, 0.2f, 0.2f), glm::vec3(0.5f, 0.5f, 0.5f), glm::vec3(1.0f, 1.0f, 1.0f), 1.0, 0.5, 1.0));
     // plights.push_back(new PointLight(glm::vec3(2.0f, -4.0f, 0.0f), glm::vec3(0.2f, 0.2f, 0.2f), glm::vec3(0.5f, 0.5f, 0.5f), glm::vec3(1.0f, 1.0f, 1.0f), 1.0, 0.5, 1.0));
 
-    animatedModelMap.emplace("whiteshark", new AnimatedModel("assets/models/whiteshark/WhiteShark.gltf", glm::vec3(0, 0, 1.0f)));
-    animatedModelMap.emplace("fish", new AnimatedModel("assets/models/guppy-fish/Guppy.gltf", glm::vec3(0, 0, -1.0f)));
-    animatedModelMap.emplace("manta", new AnimatedModel("assets/models/manta/scene.gltf", glm::vec3(1, 0, -1.0f)));
-    staticModelMap.emplace("crate", new AnimatedModel("assets/models/Crate/Crate1.obj"));
-    staticModelMap.emplace("ground", new AnimatedModel("assets/models/floor/floor.obj"));
-    staticModelMap.emplace("sphere", new AnimatedModel("assets/models/sphere/sphere.obj"));
+    World::reload();
+    FileWatcher::add("assets/swarm.txt", [&]
+                     { reload_world = true; });
+}
 
-    World::addGameObject("sphere", glm::vec3(0, 3, 0));
+float read_num(std::ifstream& file)
+{
+    std::string dummy_string;
+    char dummy_char;
+    float num;
+    file >> num;
+    file >> dummy_char;
+    file >> dummy_string;
+    file >> dummy_char;
+    file >> dummy_string;
+    return num;
+}
+
+void World::reload()
+{
+    std::ifstream file;
+    file.open("assets/swarm.txt");
+
+    // file >> collision_radius;
+    // file >> view_radius;
+    // file >> center_radius;
+    // file >> collision_influence;
+    // file >> velocity_influence;
+    // file >> position_influence;
+    // file >> center_influence;
+    // file >> acceleration;
+    // file >> max_speed;
+    // file >> swarm_size;   
+
+    collision_radius = read_num(file);
+    view_radius = read_num(file);
+    center_radius = read_num(file);
+    collision_influence = read_num(file);
+    velocity_influence = read_num(file);
+    position_influence = read_num(file);
+    center_influence = read_num(file);
+    acceleration = read_num(file);
+    max_speed = read_num(file);
+    swarm_size = read_num(file);
+
+    file.close();
+
+    std::cout << "----------------" << std::endl;
+    std::cout << "Reload World" << std::endl;
+    std::cout << "collision_radius " << collision_radius
+              << std::endl
+              << "view_radius " << view_radius
+              << std::endl
+              << "center_radius " << center_radius
+              << std::endl
+              << "collision_influence " << collision_influence
+              << std::endl
+              << "velocity_influence " << velocity_influence
+              << std::endl
+              << "position_influence " << position_influence
+              << std::endl
+              << "center_influence " << center_influence
+              << std::endl
+              << "acceleration " << acceleration
+              << std::endl
+              << "max_speed " << max_speed
+              << std::endl
+              << "swarm_size " << swarm_size
+              << std::endl;
+    std::cout << "----------------" << std::endl;
+
+    World::clear();
+    // World::addGameObject("sphere", glm::vec3(0, 3, 0));
     auto go = World::addGameObject("whiteshark", glm::vec3(0, -8, 0));
-    auto sphere = World::addGameObject("sphere", glm::vec3(0, 1, 0));
+    // auto sphere = World::addGameObject("sphere", glm::vec3(0, 1, 0));
     auto manta = World::addGameObject("manta", glm::vec3(0, -8, 5), 2.0f);
-    spheres.push_back(sphere);
-
-    // go->velocity = glm::vec3(-0.5f, 0.0f, -0.5f);
-    // go = World::addGameObject("fish", glm::vec3(0, -4, 0), 0.1f);
-    // go->velocity = glm::vec3(0.5f, 0.0f, 0.0f);
-
-    // Sphere *sphere = new Sphere();
     // spheres.push_back(sphere);
 
-    float gridSize = 10;
+    float gridSize = 5;
 
-    for (int i = 0; i < 20; i++)
+    for (int i = 0; i < swarm_size; i++)
     {
         float x = static_cast<float>(rand()) / static_cast<float>(RAND_MAX) - 0.5;
         float y = static_cast<float>(rand()) / static_cast<float>(RAND_MAX) - 0.5;
         float z = static_cast<float>(rand()) / static_cast<float>(RAND_MAX) - 0.5;
-
         GameObject *fish = World::addGameObject("fish", glm::vec3(x * gridSize, y * gridSize, z * gridSize), .1f);
         swarm.push_back(fish);
-        // go->velocity=glm::vec3(0.1f, 0.1f, 0.0f);
     }
     World::addGameObject("crate", glm::vec3(10, -8, 0));
     World::addGameObject("ground", glm::vec3(0, -15, 0));
@@ -74,7 +154,7 @@ void World::renderGameObjects(Shader *shader)
 {
     shader->use();
     Window::setMatrices(shader);
-    
+
     shader->setInt("animated", 0);
     for (auto go : World::getStaticObjects())
     {
@@ -100,12 +180,18 @@ void World::renderWater(Shader *waterShader)
     water->render(waterShader);
 }
 
-void World::renderCaustics(unsigned int environment){
+void World::renderCaustics(unsigned int environment)
+{
     water->renderCaustics(environment);
 }
 
 void World::update(float tslf)
 {
+    if (reload_world)
+    {
+        World::reload();
+        reload_world = false;
+    }
     Window::getCamera()->update(tslf);
     for (auto sphere : spheres)
     {
@@ -113,23 +199,12 @@ void World::update(float tslf)
     }
     water->update(tslf);
 
-    // Swarm update:
-    glm::vec3 center = glm::vec3(0);
     for (auto curr_obj : swarm)
     {
-        float collision_radius = 1.0f;
-        float view_radius = 5.0f;
-        float center_radius = 20.0f;
-        float collision_influence = 0.7f;
-        float velocity_influence = 0.15f;
-        float position_influence = 0.15f;
-        float center_influence = 1.0f;
-        float acceleration = 5.0f;
-        float max_speed = 5.0f;
-
         // calculate average position and speed:
         int view_count = 0;
         int collision_count = 0;
+        glm::vec3 center = glm::vec3(0);
         glm::vec3 position = glm::vec3(0.0f);
         glm::vec3 velocity = glm::vec3(0.0f);
         glm::vec3 collision_position = glm::vec3(0.0f);
@@ -174,6 +249,7 @@ void World::update(float tslf)
                 dir += velocity_dir * velocity_influence;
             }
         }
+
         if (collision_count != 0)
         {
             collision_position /= collision_count;
@@ -183,10 +259,34 @@ void World::update(float tslf)
                 dir += collision_dir * collision_influence;
             }
         }
-        float dist_to_center = glm::length(curr_obj->pos);
-        if (dist_to_center > center_radius)
+
+        float dist_to_center = glm::length(curr_obj->pos.x);
+        float x = curr_obj->pos.x;
+        float y = curr_obj->pos.y;
+        float z = curr_obj->pos.z;
+        if (x > center_radius)
         {
-            dir += glm::normalize(-curr_obj->pos) * center_influence;
+            dir += glm::vec3(-1, 0, 0) * center_influence;
+        }
+        if (x < -center_radius)
+        {
+            dir += glm::vec3(1, 0, 0) * center_influence;
+        }
+        if (y > center_radius)
+        {
+            dir += glm::vec3(0, -1, 0) * center_influence;
+        }
+        if (y < -center_radius + 3)
+        {
+            dir += glm::vec3(0, 1, 0) * center_influence;
+        }
+        if (z > center_radius)
+        {
+            dir += glm::vec3(0, 0, -1) * center_influence;
+        }
+        if (z < -center_radius)
+        {
+            dir += glm::vec3(0, 0, 1) * center_influence;
         }
 
         if (glm::length(dir) == 0)
@@ -209,6 +309,27 @@ void World::update(float tslf)
         ao->time += tslf;
     }
     // swarm update end
+}
+
+void World::clear()
+{
+    for (auto obj : staticObjects)
+    {
+        delete obj;
+    }
+    for (auto obj : animatedObjects)
+    {
+        delete obj;
+    }
+    for (auto obj : spheres)
+    {
+        delete obj;
+    }
+
+    staticObjects.clear();
+    animatedObjects.clear();
+    spheres.clear();
+    swarm.clear();
 }
 
 GameObject *World::addGameObject(std::string model, glm::vec3 pos, float scale)
@@ -295,6 +416,7 @@ std::vector<PointLight *> World::getPointLight()
     return plights;
 }
 
-unsigned int World::getCaustics(){
+unsigned int World::getCaustics()
+{
     return water->caustics;
 }

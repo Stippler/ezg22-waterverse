@@ -31,4 +31,6 @@ namespace World
 
     std::vector<PointLight *> getPointLight();
     DirLight *getDirLight();
+    void reload();
+    void clear();
 }

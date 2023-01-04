@@ -186,36 +186,9 @@ vec3 rayMarching(vec3 viewPos, vec3 modelPos) {
     } else {
         dir /= size;
     }
-
-    // vec3 pos = viewPos;
-    // float cubeCount = 0;
-    // for(int i = 0; i < numSamples; i++) {
-    //     // float numSampleFloat = float(numSamples);
-    //     // float iFloat = float(i);
-    //     // float t = iFloat / numSampleFloat;
-    //     // vec3 pos = t * start + (1 - t) * end;
-    //     pos += dir;
-    //     cubeCount += inCube(pos);
-    // }
-    // float cubeFrac = cubeCount / numSamples;
-    // vec3 color = vec3(0.73f, 0.73f, 1.0f) * cubeFrac;
     return vec3(size, size, size);
 }
 
-// this is supposed to get the world position from the depth buffer
-// vec3 worldPosFromDepth(float depth) {
-//     float z = depth * 2.0 - 1.0;
-// 
-//     vec4 clipSpacePosition = vec4(TexCoord * 2.0 - 1.0, z, 1.0);
-//     vec4 viewSpacePosition = projMatrixInv * clipSpacePosition;
-// 
-//     // Perspective division
-//     viewSpacePosition /= viewSpacePosition.w;
-// 
-//     vec4 worldSpacePosition = viewMatrixInv * viewSpacePosition;
-// 
-//     return worldSpacePosition.xyz;
-// }
 
 // This assumes the pixel position px to be in [0,1],
 // which can be done by (x+0.5)/w or (y+0.5)/h (or h-y +0.5 for screens
@@ -309,6 +282,7 @@ void main() {
     float rayLength;
     if(modelNormal == vec4(0, 0, 0, 1)) {
         rayLength = maxRaySize;
+        model_light = vec3(1);
     } else {
         rayLength = length(modelPos.xyz - viewPos);
     }
@@ -318,7 +292,7 @@ void main() {
     float cubeCount = 0;
     float shadowCount = 0;
     float lightCount = 0;
-    float stepSize = maxRaySize/numSamples;
+    float stepSize = maxRaySize/1000;
     for(int i = 0; i < numSamples; i++) {
         curPos = viewPos+i*ray*stepSize;
         cubeCount += inCube(curPos);
@@ -333,7 +307,7 @@ void main() {
             lightCount+=1.0;
         }
     }
-    float cubeFrac = cubeCount/300;
+    float cubeFrac = cubeCount/600;
     float shadowFrac = shadowCount/1000;
     float lightFrac = lightCount/numSamples;
     vec3 cubeColor = vec3(cubeFrac, cubeFrac/2, cubeFrac/3);
