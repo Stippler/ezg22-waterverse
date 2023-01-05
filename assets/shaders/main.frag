@@ -278,7 +278,6 @@ void main() {
         float causticsIntensityB = 0.5 * (blur(caustics, projCoords.xy + vec2(-2, -2) * (1.0 / textureSize(shadowMap, 0)), resolution, vec2(0., 0.5)) +
             blur(caustics, projCoords.xy + vec2(-2, -2) * (1.0 / textureSize(shadowMap, 0)), resolution, vec2(0.5, 0.)));
 
-        //all_lights += vec3(causticsIntensityR, causticsIntensityG, causticsIntensityB);
         model_light *= vec3(causticsIntensityR, causticsIntensityG, causticsIntensityB);
     }
 
@@ -329,11 +328,11 @@ void main() {
     float lightFrac = lightCount/numSamples;
 
     float cubeFrac = cubeCount/numSamples;
-    vec3 cubeColor = vec3(average_light_depth, average_light_depth/2, average_light_depth/3)/5;
+    vec3 cubeColor = vec3(cubeFrac, cubeFrac/2, cubeFrac/3);
 
     vec3 light = (model_light*0.7+0.5*waterLight);
     fragColor = vec4(light, 1);// vec4(light+vec3(0.3, 0.3, 0.3), 1);
-    // fragColor = modelAlbedo;
+    fragColor = waterAlbedo;
     // fragColor = vec4(waterLight, 1);
     // fragColor = vec4(cubeColor, 1);
     // fragColor = vec4(ssao, ssao, ssao, 1);

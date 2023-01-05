@@ -75,7 +75,6 @@ struct SkyBoxGBuffer
         shader->setInt("cubeMap", 0);
 
         resize();
-        // TODO: prepare framebuffer
     }
 
     void resize()
@@ -101,7 +100,7 @@ struct SkyBoxGBuffer
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, gAlbedo, 0);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, gAlbedo, 0);
 
         unsigned int attachments[1] = {GL_COLOR_ATTACHMENT0};
         glDrawBuffers(1, attachments);
@@ -123,6 +122,13 @@ struct SkyBoxGBuffer
     {
         glBindFramebuffer(GL_FRAMEBUFFER, gBuffer);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        // set opengl properties
+        glDepthFunc(GL_LEQUAL);
+        // glFrontFace(GL_CW);
+        glEnable(GL_CULL_FACE);
+
+        // set shader stuff
         shader->use();
         glm::mat4 proj = glm::perspective(glm::radians(45.0f), (float)Window::getWidth() / (float)Window::getHeight(), 0.1f, 100.0f);
         Window::setMatrices(shader);
@@ -130,11 +136,19 @@ struct SkyBoxGBuffer
         glm::mat4 view = glm::mat4(glm::mat3(Window::getCamera()->getViewMatrix()));
         shader->setMat4("view", view);
         unsigned int skyboxTexture = MyTextureLoader::getTexture("skybox");
+
+        // render
         glBindVertexArray(VAO);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxTexture);
         glDrawArrays(GL_TRIANGLES, 0, 36);
+
+        // free stuff
         glBindVertexArray(0);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+        glDisable(GL_CULL_FACE);
+        glDepthFunc(GL_LESS);
+        // glFrontFace(GL_CCW);
     }
 };

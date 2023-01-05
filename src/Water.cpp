@@ -98,6 +98,9 @@ Water::Water(unsigned int width, unsigned int height) : width(width), height(hei
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
 
+
+
+    // 
     glGenFramebuffers(1, &causticsFBO);
     glBindFramebuffer(GL_FRAMEBUFFER, causticsFBO);
 
@@ -145,9 +148,8 @@ void Water::update(float tslf)
     }
     static int ledl = 0;
 
-    if(ledl%500==0 && ledl <2) {
+    if(ledl%500==0) {
         addDrop(glm::vec2(0.5, 0.8), 0.1, 10);
-        // addDrop(glm::vec2(-0.5, 0), 0.1, 2);
     }
     ledl++;
 
