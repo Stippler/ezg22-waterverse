@@ -1,6 +1,5 @@
 #include "Water.h"
 
-
 #include <GL/glew.h>
 #include <GL/gl.h>
 
@@ -34,7 +33,7 @@ Water::Water(unsigned int width, unsigned int height) : width(width), height(hei
     causticsShader = new Shader("assets/shaders/water/caustics.vert",
                                 "assets/shaders/water/caustics.frag");
     FileWatcher::add("assets/shaders/water/caustics.vert", [&]()
-                         { reloadCompute = true; });
+                     { reloadCompute = true; });
     FileWatcher::add("assets/shaders/water/caustics.frag", [&]()
                      { reloadCompute = true; });
 
@@ -70,9 +69,9 @@ Water::Water(unsigned int width, unsigned int height) : width(width), height(hei
             float u = ((float)x / width);
             float v = ((float)z / height);
 
-            vertices[idx++] = (float)x / width-0.5f;
+            vertices[idx++] = (float)x / width - 0.5f;
             vertices[idx++] = 0.5f;
-            vertices[idx++] = (float)z / height-0.5f;
+            vertices[idx++] = (float)z / height - 0.5f;
             vertices[idx++] = u;
             vertices[idx++] = v;
         }
@@ -118,47 +117,47 @@ Water::Water(unsigned int width, unsigned int height) : width(width), height(hei
      *****************/
     float cubeVertices[] = {
         // positions          // normals
-        -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
-        0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
-        0.5f, 0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
-        0.5f, 0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
-        -0.5f, 0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
-        -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+         0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+         0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+         0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+        -0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
 
-        -0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f,
-        0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f,
-        0.5f, 0.5f, 0.5f, 0.0f, 0.0f, 1.0f,
-        0.5f, 0.5f, 0.5f, 0.0f, 0.0f, 1.0f,
-        -0.5f, 0.5f, 0.5f, 0.0f, 0.0f, 1.0f,
-        -0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f,
+        -0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+         0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+         0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+         0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+        -0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+        -0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
 
-        -0.5f, 0.5f, 0.5f, -1.0f, 0.0f, 0.0f,
-        -0.5f, 0.5f, -0.5f, -1.0f, 0.0f, 0.0f,
-        -0.5f, -0.5f, -0.5f, -1.0f, 0.0f, 0.0f,
-        -0.5f, -0.5f, -0.5f, -1.0f, 0.0f, 0.0f,
-        -0.5f, -0.5f, 0.5f, -1.0f, 0.0f, 0.0f,
-        -0.5f, 0.5f, 0.5f, -1.0f, 0.0f, 0.0f,
+        -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+        -0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+        -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+        -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+        -0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+        -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
 
-        0.5f, 0.5f, 0.5f, 1.0f, 0.0f, 0.0f,
-        0.5f, 0.5f, -0.5f, 1.0f, 0.0f, 0.0f,
-        0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 0.0f,
-        0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 0.0f,
-        0.5f, -0.5f, 0.5f, 1.0f, 0.0f, 0.0f,
-        0.5f, 0.5f, 0.5f, 1.0f, 0.0f, 0.0f,
+         0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+         0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+         0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+         0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+         0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+         0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
 
-        //-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
-        // 0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
-        // 0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
-        // 0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
-        //-0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
-        //-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+         0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+         0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+         0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+        -0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
 
-        //-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
-        // 0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
-        // 0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
-        // 0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
-        //-0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
-        //-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f
+        // -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
+        //  0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
+        //  0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+        //  0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+        // -0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+        // -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f
     };
 
     glGenVertexArrays(1, &cubeVAO);
@@ -227,8 +226,18 @@ void Water::update(float tslf)
     ledl++;
 
     // stepSimulation();
-    stepSimulation();
-    updateNormals();
+    bool updated = false;
+    timer += tslf;
+    while (timer > tick)
+    {
+        stepSimulation();
+        timer -= tick;
+        updated=true;
+    }
+    if (updated)
+    {
+        updateNormals();
+    }
 }
 
 void Water::render(Shader *waterShader)
@@ -250,7 +259,7 @@ void Water::render(Shader *waterShader)
     texture->bind(0);
     Window::setMatrices(waterShader);
     waterShader->setDirLight("light", World::getDirLight());
-    waterShader->setMat4("model", model);
+    waterShader->setMat4("model", modelWater);
     waterShader->setInt("tex", 0);
 
     glBindVertexArray(VAO);
@@ -260,11 +269,11 @@ void Water::render(Shader *waterShader)
 
     environmentShader->use();
     Window::setMatrices(environmentShader);
-    environmentShader->setMat4("model", model);
+    environmentShader->setMat4("model", modelGlass);
     glBindVertexArray(cubeVAO);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
-    glDrawArrays(GL_TRIANGLES, 0, 24);
+    glDrawArrays(GL_TRIANGLES, 0, 30);
     glBindVertexArray(0);
 }
 
@@ -279,7 +288,7 @@ void Water::renderCaustics(unsigned int environment)
     Window::setMatrices(causticsShader);
     causticsShader->setMat4("lightSpaceMatrix", World::getLightSpaceMatrix());
     causticsShader->setDirLight("light", World::getDirLight());
-    causticsShader->setMat4("model", model);
+    // causticsShader->setMat4("model", model);
     causticsShader->setInt("tex", 0);
     causticsShader->setInt("environment", 1);
     glActiveTexture(GL_TEXTURE1);

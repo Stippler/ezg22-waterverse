@@ -323,14 +323,14 @@ void main() {
         // }
     }
 
-    average_light_depth /= cubeCount;
+    average_light_depth /= max(cubeCount, 1);
     float shadowFrac = shadowCount/1000;
     float lightFrac = lightCount/numSamples;
 
     float cubeFrac = cubeCount/numSamples;
-    vec3 cubeColor = vec3(cubeFrac, cubeFrac/2, cubeFrac/3);
+    vec3 cubeColor = vec3(average_light_depth, average_light_depth/2, average_light_depth/3)/5;
 
-    vec3 light = (model_light*0.7+waterLight);
+    vec3 light = (model_light*0.7+waterLight)-cubeColor;
     fragColor = vec4(light, 1);// vec4(light+vec3(0.3, 0.3, 0.3), 1);
     // fragColor = (waterAlbedo+backgroundAlbedo)/2;
     // fragColor = waterAlbedo;

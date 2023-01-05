@@ -145,7 +145,7 @@ void World::reload()
         swarm.push_back(fish);
     }
     // World::addGameObject("crate", glm::vec3(10, -8, 0));
-    World::addGameObject("ground", glm::vec3(0, -15, 0));
+    World::addGameObject("ground", glm::vec3(0, -15+0.966666, 0), 0.9666666);
 }
 
 void World::renderGameObjects(Shader *shader)

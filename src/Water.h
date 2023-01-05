@@ -7,7 +7,8 @@
 #include "WaterTexture.h"
 #include "MyTextureLoader.h"
 
-struct GridVertex{
+struct GridVertex
+{
     glm::vec3 pos;
     glm::vec2 texCoords;
 };
@@ -27,8 +28,8 @@ public:
     void render(Shader *waterShader);
     void renderCaustics(unsigned int environment);
     unsigned int causticsFBO, caustics;
-private:
 
+private:
     unsigned int width, height;
     unsigned int VBO, VAO, EBO;
 
@@ -36,11 +37,12 @@ private:
 
     unsigned int cubeVAO, cubeVBO;
 
-    unsigned int idx=0;
+    unsigned int idx = 0;
 
-    glm::mat4 model = glm::scale(glm::mat4(1.0f), glm::vec3(30, 30, 30));
+    glm::mat4 modelWater = glm::scale(glm::mat4(1.0f), glm::vec3(30-0.966666, 30-0.966666, 30-0.966666));
+    glm::mat4 modelGlass = glm::scale(glm::mat4(1.0f), glm::vec3(30, 30, 30));
 
-    glm::mat4 modelCaustics = glm::translate(glm::scale(glm::mat4(1.0f), glm::vec3(30, 30, 30)), glm::vec3(1,1,1));
+    glm::mat4 modelCaustics = glm::translate(glm::scale(glm::mat4(1.0f), glm::vec3(30-2*0.966666, 1, 30-2*0.966666)), glm::vec3(1, 1, 1));
 
     ComputeShader *normalCompute;
     ComputeShader *dropCompute;
@@ -54,6 +56,9 @@ private:
 
     bool reloadCompute = false;
     bool reloadShader = false;
+
+    float tick = 1 / 60.0f;
+    float timer = 0.0f;
 
     void swapTexture();
 };
