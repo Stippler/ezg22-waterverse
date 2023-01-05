@@ -30,13 +30,15 @@ Water *water;
 
 // Swarm update:
 float collision_radius = 1.0f;
-float view_radius = 5.0f;
+float view_radius = 3.0f;
 float center_radius = 12.0f;
+float predator_radius = 5.0f;
 
 float collision_influence = 0.7f;
 float velocity_influence = 0.15f;
 float position_influence = 0.15f;
-float center_influence = 1.0f;
+float center_influence = 2.0f;
+float predator_influence = 0.3f;
 
 float acceleration = 5.0f;
 float max_speed = 5.0f;
@@ -69,7 +71,7 @@ void World::init()
                      { reload_world = true; });
 }
 
-float read_num(std::ifstream& file)
+float read_num(std::ifstream &file)
 {
     std::string dummy_string;
     char dummy_char;
@@ -82,8 +84,6 @@ float read_num(std::ifstream& file)
     return num;
 }
 
-
-
 void World::reload()
 {
     std::ifstream file;
@@ -92,10 +92,12 @@ void World::reload()
     collision_radius = read_num(file);
     view_radius = read_num(file);
     center_radius = read_num(file);
+    predator_radius = read_num(file);
     collision_influence = read_num(file);
     velocity_influence = read_num(file);
     position_influence = read_num(file);
     center_influence = read_num(file);
+    predator_influence = read_num(file);
     acceleration = read_num(file);
     max_speed = read_num(file);
     swarm_size = read_num(file);
@@ -129,10 +131,11 @@ void World::reload()
     World::clear();
     // World::addGameObject("sphere", glm::vec3(0, 3, 0));
     auto go = World::addGameObject("whiteshark", glm::vec3(0, -8, 0), 0.4f);
+    go->velocity=glm::vec3(1, 0, 1);
     predators.push_back(go);
     // auto sphere = World::addGameObject("sphere", glm::vec3(0, 1, 0));
     // auto manta = World::addGameObject("manta", glm::vec3(0, -8, 5), 2.0f);
-    // spheres.push_back(sphere);0.3
+    // spheres.push_back(sphere);
 
     float gridSize = 5;
 
@@ -144,8 +147,7 @@ void World::reload()
         GameObject *fish = World::addGameObject("fish", glm::vec3(x * gridSize, y * gridSize, z * gridSize), .1f);
         swarm.push_back(fish);
     }
-    // World::addGameObject("crate", glm::vec3(10, -8, 0));
-    World::addGameObject("ground", glm::vec3(0, -15+0.966666, 0), 0.9666666);
+    World::addGameObject("ground", glm::vec3(0, -15 + 0.966666, 0), 0.9666666);
 }
 
 void World::renderGameObjects(Shader *shader)
@@ -193,6 +195,28 @@ void World::update(float tslf)
     Window::getCamera()->update(tslf);
     water->update(tslf);
 
+    for (auto predator : predators)
+    {
+        glm::vec3 dir = glm::normalize(predator->velocity) * 0.4f;
+        if (glm::length(predator->pos) > 13)
+        {
+            dir += glm::normalize(-predator->pos) * 5.0f;
+        }
+        float r1 = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+        float r2 = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+        float r3 = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+        dir += glm::normalize(glm::vec3(r1, r2, r3)) * 0.1f;
+
+        dir = glm::normalize(dir);
+        predator->velocity += acceleration * dir * tslf;
+
+        float speed = glm::length(predator->velocity);
+        if (speed > 5)
+        {
+            predator->velocity *= (5 / speed);
+        }
+    }
+
     for (auto curr_obj : swarm)
     {
         // calculate average position and speed:
@@ -202,7 +226,6 @@ void World::update(float tslf)
         glm::vec3 position = glm::vec3(0.0f);
         glm::vec3 velocity = glm::vec3(0.0f);
         glm::vec3 collision_position = glm::vec3(0.0f);
-
         for (auto neighbour : swarm)
         {
             if (neighbour == curr_obj)
@@ -281,6 +304,12 @@ void World::update(float tslf)
         if (z < -center_radius)
         {
             dir += glm::vec3(0, 0, 1) * center_influence;
+        }
+
+        glm::vec3 predator_dir = curr_obj->pos - predators[0]->pos;
+        if (glm::length(predator_dir) < predator_radius)
+        {
+            dir += glm::normalize(predator_dir) * predator_influence;
         }
 
         if (glm::length(dir) == 0)

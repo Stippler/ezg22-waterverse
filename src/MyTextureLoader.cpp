@@ -7,12 +7,12 @@ namespace MyTextureLoader
     void init()
     {
         std::vector<std::string> faces = {
-            "assets/skybox/right.jpg",
-            "assets/skybox/left.jpg",
-            "assets/skybox/top.jpg",
-            "assets/skybox/bottom.jpg",
-            "assets/skybox/front.jpg",
-            "assets/skybox/back.jpg"};
+            "assets/skybox/right.jpeg",
+            "assets/skybox/left.jpeg",
+            "assets/skybox/top.jpeg",
+            "assets/skybox/bottom.jpeg",
+            "assets/skybox/front.jpeg",
+            "assets/skybox/back.jpeg"};
         textures.emplace("skybox", loadCubemap(faces));
     }
 

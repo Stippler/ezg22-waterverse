@@ -283,11 +283,17 @@ void main() {
 
     float maxRaySize = 100;
     float rayLength;
+    float hitModel=0.0;
     if(modelNormal == vec4(0, 0, 0, 1)) {
         rayLength = maxRaySize;
-        model_light = vec3(backgroundAlbedo);
     } else {
         rayLength = length(modelPos.xyz - viewPos);
+        hitModel=1.0;
+    }
+
+    float hitCube = 1;
+    if(waterNormal == vec4(0,0,0,1)){
+        hitCube = 0;
     }
 
     vec3 curPos = viewPos;
@@ -328,10 +334,17 @@ void main() {
     float lightFrac = lightCount/numSamples;
 
     float cubeFrac = cubeCount/numSamples;
-    vec3 cubeColor = vec3(average_light_depth, average_light_depth/2, average_light_depth/3)/5;
+    vec3 cubeColor = vec3(average_light_depth, average_light_depth/2, average_light_depth/3)/4;
 
-    vec3 light = (model_light*0.7+waterLight)-cubeColor;
-    fragColor = vec4(light, 1);// vec4(light+vec3(0.3, 0.3, 0.3), 1);
+    float inside = inCube(viewPos);
+    float water_t = (1-inside)*0.4;
+    float model_t = 1-water_t;
+
+    vec3 light = (1-hitModel)*(vec3(backgroundAlbedo)-(1-inside)*hitCube*vec3(0.17))+
+                 (model_t*model_light+(water_t*waterAlbedo.xyz))-cubeColor;
+    fragColor = vec4(light, 1);
+    // vec4(light+vec3(0.3, 0.3, 0.3), 1);
+    // fragColor = vec3(waterLight, 1);
     // fragColor = (waterAlbedo+backgroundAlbedo)/2;
     // fragColor = waterAlbedo;
     // fragColor = backgroundAlbedo;
