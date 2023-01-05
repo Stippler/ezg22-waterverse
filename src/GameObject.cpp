@@ -31,6 +31,10 @@ void GameObject::render(Shader *shader)
     {
         modelMatrix *= glm::orientation(glm::normalize(velocity), model->axis);
     }
+    else
+    {
+        modelMatrix *= glm::orientation(glm::normalize(glm::vec3(1, 0, 0)), model->axis);
+    }
 
     shader->setMat4("model", modelMatrix);
 

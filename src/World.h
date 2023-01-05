@@ -5,7 +5,6 @@
 
 #include "GameObject.h"
 #include "Shader.h"
-#include "Sphere.h"
 
 namespace World
 {

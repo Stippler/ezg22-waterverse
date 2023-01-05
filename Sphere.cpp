@@ -1,19 +1,18 @@
 #include "Sphere.h"
 
-
 #define _USE_MATH_DEFINES
 #include <cmath>
 #define PI M_PI
 #include <vector>
 
-#include "TextureLoader.h"
+#include "MyTextureLoader.h"
 
 Sphere::Sphere(float radius, int sectorCount, int stackCount, glm::vec3 position)
 {
 	model = glm::translate(model, position);
 
-	textureDiffuse = TextureLoader::getTexture("assets/silver.jpg");
-	// textureSpecular = TextureLoader::getTexture("assets/bricks_specular.dds");
+	textureDiffuse = MyTextureLoader::getTexture("assets/silver.jpg");
+	// textureSpecular = MyTextureLoader::getTexture("assets/bricks_specular.dds");
 
 	std::vector<float> vertices;
 	std::vector<float> normals;

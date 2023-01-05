@@ -41,8 +41,9 @@ void GBuffer::resize()
         glDeleteTextures(1, &gNormal);
         glDeleteTextures(1, &gAlbedo);
         glDeleteRenderbuffers(1, &rboDepth);
-        initialized = true;
     }
+    initialized = true;
+
     float width = Window::getWidth();
     float height = Window::getHeight();
     // ssao

@@ -26,10 +26,12 @@
 #include "World.h"
 #include "WaterGBuffer.h"
 #include "Quad.h"
+#include "SkyBoxGBuffer.h"
 
 // Water
 GBuffer *gbuffer;
 WaterGBuffer *waterGBuffer;
+SkyBoxGBuffer *skyBoxGBuffer;
 SSAO *ssao;
 
 Quad *quad;
@@ -95,6 +97,7 @@ void Renderer::init()
     cubeMap = new CubeMap(World::getPointLight()[0]->position);
     gbuffer = new GBuffer();
     waterGBuffer = new WaterGBuffer();
+    skyBoxGBuffer = new SkyBoxGBuffer();
     ssao = new SSAO(gbuffer);
     quad = new Quad();
 
@@ -116,6 +119,10 @@ void Renderer::free()
 {
     // Delete shaders
     delete skinningShader;
+    delete skyBoxGBuffer;
+    delete gbuffer;
+    delete ssao;
+    delete quad;
 }
 
 void Renderer::render()
@@ -136,6 +143,7 @@ void Renderer::render()
         gbuffer->resize();
         waterGBuffer->resize();
         ssao->resize();
+        skyBoxGBuffer->resize();
         resizeViewport = false;
     }
 
@@ -148,8 +156,8 @@ void Renderer::render()
     gbuffer->render();
     gbuffer->renderEnvironment();
     ssao->render();
-
     waterGBuffer->render();
+    skyBoxGBuffer->render();
     glEnable(GL_BLEND);
 
     // Render Water GBuffer
@@ -210,6 +218,8 @@ void Renderer::render()
     mainShader->setInt("ssao", 9);
     mainShader->setInt("shadowMap", 10);
 
+    mainShader->setInt("background", 11);
+
     mainShader->setDirLight("light", World::getDirLight());
     mainShader->setMaterial("material", coral);
     mainShader->setMat4("lightSpaceMatrix", World::getLightSpaceMatrix());
@@ -248,6 +258,9 @@ void Renderer::render()
     glBindTexture(GL_TEXTURE_2D, ssao->ssaoColorBuffer);
     glActiveTexture(GL_TEXTURE10);
     glBindTexture(GL_TEXTURE_2D, gbuffer->environment);
+
+    glActiveTexture(GL_TEXTURE11);
+    glBindTexture(GL_TEXTURE_2D, skyBoxGBuffer->gAlbedo);
 
     quad->render(mainShader);
     // World::renderWater();

@@ -19,6 +19,7 @@ std::unordered_map<std::string, AnimatedModel *> staticModelMap;
 DirLight *light;
 std::vector<PointLight *> plights;
 std::vector<GameObject *> swarm;
+std::vector<GameObject *> predators;
 std::vector<GameObject *> spheres;
 Water *water;
 
@@ -45,7 +46,7 @@ void World::init()
 {
     animatedModelMap.emplace("whiteshark", new AnimatedModel("assets/models/whiteshark/WhiteShark.gltf", glm::vec3(0, 0, 1.0f)));
     animatedModelMap.emplace("fish", new AnimatedModel("assets/models/guppy-fish/Guppy.gltf", glm::vec3(0, 0, -1.0f)));
-    animatedModelMap.emplace("manta", new AnimatedModel("assets/models/manta/scene.gltf", glm::vec3(1, 0, -1.0f)));
+    // animatedModelMap.emplace("manta", new AnimatedModel("assets/models/manta/scene.gltf", glm::vec3(0, -1.0f, 0)));
     staticModelMap.emplace("crate", new AnimatedModel("assets/models/Crate/Crate1.obj"));
     staticModelMap.emplace("ground", new AnimatedModel("assets/models/floor/floor.obj"));
     staticModelMap.emplace("sphere", new AnimatedModel("assets/models/sphere/sphere.obj"));
@@ -131,10 +132,11 @@ void World::reload()
 
     World::clear();
     // World::addGameObject("sphere", glm::vec3(0, 3, 0));
-    auto go = World::addGameObject("whiteshark", glm::vec3(0, -8, 0));
+    auto go = World::addGameObject("whiteshark", glm::vec3(0, -8, 0), 0.4f);
+    predators.push_back(go);
     // auto sphere = World::addGameObject("sphere", glm::vec3(0, 1, 0));
-    auto manta = World::addGameObject("manta", glm::vec3(0, -8, 5), 2.0f);
-    // spheres.push_back(sphere);
+    // auto manta = World::addGameObject("manta", glm::vec3(0, -8, 5), 2.0f);
+    // spheres.push_back(sphere);0.3
 
     float gridSize = 5;
 
@@ -146,7 +148,7 @@ void World::reload()
         GameObject *fish = World::addGameObject("fish", glm::vec3(x * gridSize, y * gridSize, z * gridSize), .1f);
         swarm.push_back(fish);
     }
-    World::addGameObject("crate", glm::vec3(10, -8, 0));
+    // World::addGameObject("crate", glm::vec3(10, -8, 0));
     World::addGameObject("ground", glm::vec3(0, -15, 0));
 }
 
@@ -276,7 +278,7 @@ void World::update(float tslf)
         {
             dir += glm::vec3(0, -1, 0) * center_influence;
         }
-        if (y < -center_radius + 3)
+        if (y < -center_radius)
         {
             dir += glm::vec3(0, 1, 0) * center_influence;
         }
@@ -330,6 +332,7 @@ void World::clear()
     animatedObjects.clear();
     spheres.clear();
     swarm.clear();
+    predators.clear();
 }
 
 GameObject *World::addGameObject(std::string model, glm::vec3 pos, float scale)

@@ -56,6 +56,8 @@ uniform sampler2D gWaterPosition;
 uniform sampler2D gWaterNormal;
 uniform sampler2D gWaterAlbedo;
 
+uniform sampler2D background;
+
 uniform vec2 screenSize;
 
 uniform mat4 view;
@@ -171,7 +173,7 @@ float shadowCalculationPointLight(vec3 fragPos, PointLight light) {
 }
 
 float inCube(vec3 pos) {
-    float size = 15;
+    float size = 14.5;
     vec3 bottomLeft = vec3(-size);
     vec3 topRight = vec3(size);
     vec3 s = step(bottomLeft, pos) - step(topRight, pos);
@@ -235,6 +237,8 @@ void main() {
     vec4 modelNormal = texture(gNormal, texCoords);
     vec4 modelAlbedo = texture(gAlbedo, texCoords);
 
+    vec4 backgroundAlbedo = texture(background, texCoords);
+
     // wrong positions?
     vec4 waterPos = texture(gWaterPosition, texCoords);
     vec4 waterNormal = texture(gWaterNormal, texCoords);
@@ -282,40 +286,55 @@ void main() {
     float rayLength;
     if(modelNormal == vec4(0, 0, 0, 1)) {
         rayLength = maxRaySize;
-        model_light = vec3(1);
+        model_light = vec3(backgroundAlbedo);
     } else {
         rayLength = length(modelPos.xyz - viewPos);
     }
 
     vec3 curPos = viewPos;
-    float numSamples = 1000*(rayLength/maxRaySize);
+    int totalSamples = 1000;
+    float numSamples = totalSamples*(rayLength/maxRaySize);
     float cubeCount = 0;
     float shadowCount = 0;
     float lightCount = 0;
-    float stepSize = maxRaySize/1000;
+    float stepSize = maxRaySize/totalSamples;
+    float average_light_depth=0.0;
     for(int i = 0; i < numSamples; i++) {
         curPos = viewPos+i*ray*stepSize;
-        cubeCount += inCube(curPos);
-        vec4 curPosLightSpace = lightSpaceMatrix*vec4(curPos, 1.0);
-        vec3 currProj = curPosLightSpace.xyz / curPosLightSpace.w;
-        currProj = currProj * 0.5 + 0.5;
-        float closestDepth = texture(shadowMap, currProj.xy).w;
-        float currDepth = currProj.z;
-        if(currDepth-0.01 > closestDepth) {
-            //we are in shadow
-            shadowCount+=1.0;
-            lightCount+=1.0;
-        }
+        float in_cube = inCube(curPos);
+        cubeCount += in_cube;
+        // inCube -> 0 outside
+        //        -> 1 otherwise
+        // calc average distance to light source?
+        average_light_depth += in_cube*(curPos.y-15)/30*-1;
+
+        // vec4 pos_lightspace = lightSpaceMatrix*vec4(curPos, 1.0);
+        // vec4 pos_lightspace = lightSpaceMatrix*vec4(curPos, 1.0);
+        // float dist_lightspace = pos_lightspace.y;
+        // average_light_depth += dist_lightspace*in_cube;
+        // TODO: volumetric directional light:
+        // vec3 currProj = curPosLightSpace.xyz / curPosLightSpace.w;
+        // currProj = currProj * 0.5 + 0.5;
+        // float closestDepth = texture(shadowMap, currProj.xy).w;
+        // float currDepth = currProj.z;
+        // if(currDepth-0.01 > closestDepth) {
+        //     //we are in shadow
+        //     shadowCount+=1.0;
+        //     lightCount+=1.0;
+        // }
     }
-    float cubeFrac = cubeCount/600;
+
+    average_light_depth /= cubeCount;
     float shadowFrac = shadowCount/1000;
     float lightFrac = lightCount/numSamples;
-    vec3 cubeColor = vec3(cubeFrac, cubeFrac/2, cubeFrac/3);
-    fragColor = vec4(model_light-cubeColor+waterLight, 1);
+
+    float cubeFrac = cubeCount/numSamples;
+    vec3 cubeColor = vec3(average_light_depth, average_light_depth/2, average_light_depth/3)/5;
+
+    vec3 light = (model_light*0.7+0.5*waterLight);
+    fragColor = vec4(light, 1);// vec4(light+vec3(0.3, 0.3, 0.3), 1);
+    // fragColor = modelAlbedo;
     // fragColor = vec4(waterLight, 1);
     // fragColor = vec4(cubeColor, 1);
-
-    // vec4 dirShadow = texture(shadowMap, texCoords);
     // fragColor = vec4(ssao, ssao, ssao, 1);
-    // fragColor = modelNormal;
 }
