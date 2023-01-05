@@ -1,5 +1,6 @@
 #include "Water.h"
 
+
 #include <GL/glew.h>
 #include <GL/gl.h>
 
@@ -31,7 +32,18 @@ Water::Water(unsigned int width, unsigned int height) : width(width), height(hei
     dropCompute = new ComputeShader("assets/shaders/water/drop.comp");
 
     causticsShader = new Shader("assets/shaders/water/caustics.vert",
-                             "assets/shaders/water/caustics.frag");
+                                "assets/shaders/water/caustics.frag");
+    FileWatcher::add("assets/shaders/water/caustics.vert", [&]()
+                         { reloadCompute = true; });
+    FileWatcher::add("assets/shaders/water/caustics.frag", [&]()
+                     { reloadCompute = true; });
+
+    environmentShader = new Shader("assets/shaders/sky/environment.vert",
+                                   "assets/shaders/sky/environment.frag");
+    FileWatcher::add("assets/shaders/sky/environment.vert", [&]()
+                     { reloadShader = true; });
+    FileWatcher::add("assets/shaders/sky/environment.frag", [&]()
+                     { reloadShader = true; });
 
     std::cout << width << "   " << height << std::endl;
     texture = new WaterTexture(width, height);
@@ -44,6 +56,9 @@ Water::Water(unsigned int width, unsigned int height) : width(width), height(hei
     FileWatcher::add("assets/shaders/water/drop.comp", [&]()
                      { reloadCompute = true; });
 
+    /****************
+     * WATER SURFACE *
+     *****************/
     std::vector<float> vertices(height * width * 5);
     std::vector<unsigned int> indices(height * width * 2 * 3);
 
@@ -55,9 +70,9 @@ Water::Water(unsigned int width, unsigned int height) : width(width), height(hei
             float u = ((float)x / width);
             float v = ((float)z / height);
 
-            vertices[idx++] = (float)x / width;
-            vertices[idx++] = 0.0f;
-            vertices[idx++] = (float)z / height;
+            vertices[idx++] = (float)x / width-0.5f;
+            vertices[idx++] = 0.5f;
+            vertices[idx++] = (float)z / height-0.5f;
             vertices[idx++] = u;
             vertices[idx++] = v;
         }
@@ -98,9 +113,65 @@ Water::Water(unsigned int width, unsigned int height) : width(width), height(hei
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
 
+    /****************
+     * CUBE VERTICES *
+     *****************/
+    float cubeVertices[] = {
+        // positions          // normals
+        -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
+        0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
+        0.5f, 0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
+        0.5f, 0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
+        -0.5f, 0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
+        -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
 
+        -0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f,
+        0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f,
+        0.5f, 0.5f, 0.5f, 0.0f, 0.0f, 1.0f,
+        0.5f, 0.5f, 0.5f, 0.0f, 0.0f, 1.0f,
+        -0.5f, 0.5f, 0.5f, 0.0f, 0.0f, 1.0f,
+        -0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f,
 
-    // 
+        -0.5f, 0.5f, 0.5f, -1.0f, 0.0f, 0.0f,
+        -0.5f, 0.5f, -0.5f, -1.0f, 0.0f, 0.0f,
+        -0.5f, -0.5f, -0.5f, -1.0f, 0.0f, 0.0f,
+        -0.5f, -0.5f, -0.5f, -1.0f, 0.0f, 0.0f,
+        -0.5f, -0.5f, 0.5f, -1.0f, 0.0f, 0.0f,
+        -0.5f, 0.5f, 0.5f, -1.0f, 0.0f, 0.0f,
+
+        0.5f, 0.5f, 0.5f, 1.0f, 0.0f, 0.0f,
+        0.5f, 0.5f, -0.5f, 1.0f, 0.0f, 0.0f,
+        0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 0.0f,
+        0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 0.0f,
+        0.5f, -0.5f, 0.5f, 1.0f, 0.0f, 0.0f,
+        0.5f, 0.5f, 0.5f, 1.0f, 0.0f, 0.0f,
+
+        //-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+        // 0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+        // 0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+        // 0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+        //-0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+        //-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+
+        //-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
+        // 0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
+        // 0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+        // 0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+        //-0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+        //-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f
+    };
+
+    glGenVertexArrays(1, &cubeVAO);
+    glGenBuffers(1, &cubeVBO);
+    glBindVertexArray(cubeVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, cubeVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVertices), &cubeVertices, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *)0);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *)(3 * sizeof(float)));
+
+    // Framebuffer
     glGenFramebuffers(1, &causticsFBO);
     glBindFramebuffer(GL_FRAMEBUFFER, causticsFBO);
 
@@ -133,6 +204,7 @@ Water::Water(unsigned int width, unsigned int height) : width(width), height(hei
 Water::~Water()
 {
     delete texture;
+    delete copyTexture;
 }
 
 void Water::update(float tslf)
@@ -148,7 +220,8 @@ void Water::update(float tslf)
     }
     static int ledl = 0;
 
-    if(ledl%500==0) {
+    if (ledl % 500 == 0)
+    {
         addDrop(glm::vec2(0.5, 0.8), 0.1, 10);
     }
     ledl++;
@@ -163,14 +236,18 @@ void Water::render(Shader *waterShader)
     if (reloadShader)
     {
         waterShader->reload();
+        environmentShader->reload();
+        causticsShader->reload();
         std::cout << "reload water shader" << std::endl;
+
         reloadShader = false;
     }
+
+    unsigned int cubemapTexture = MyTextureLoader::getCubemap("skybox");
 
     // bind textures
     waterShader->use();
     texture->bind(0);
-
     Window::setMatrices(waterShader);
     waterShader->setDirLight("light", World::getDirLight());
     waterShader->setMat4("model", model);
@@ -179,9 +256,20 @@ void Water::render(Shader *waterShader)
     glBindVertexArray(VAO);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glDrawElements(GL_TRIANGLES, idx, GL_UNSIGNED_INT, 0);
+    glBindVertexArray(0);
+
+    environmentShader->use();
+    Window::setMatrices(environmentShader);
+    environmentShader->setMat4("model", model);
+    glBindVertexArray(cubeVAO);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
+    glDrawArrays(GL_TRIANGLES, 0, 24);
+    glBindVertexArray(0);
 }
 
-void Water::renderCaustics(unsigned int environment){
+void Water::renderCaustics(unsigned int environment)
+{
     glViewport(0, 0, 1024, 1024);
     glBindFramebuffer(GL_FRAMEBUFFER, causticsFBO);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

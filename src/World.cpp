@@ -13,6 +13,11 @@
 std::vector<GameObject *> animatedObjects;
 std::vector<GameObject *> staticObjects;
 
+std::vector<float> swarmTimes;
+std::vector<glm::vec3> swarmPositions;
+
+std::vector<float> swarmTimes2;
+
 std::unordered_map<std::string, AnimatedModel *> animatedModelMap;
 std::unordered_map<std::string, AnimatedModel *> staticModelMap;
 
@@ -77,21 +82,12 @@ float read_num(std::ifstream& file)
     return num;
 }
 
+
+
 void World::reload()
 {
     std::ifstream file;
     file.open("assets/swarm.txt");
-
-    // file >> collision_radius;
-    // file >> view_radius;
-    // file >> center_radius;
-    // file >> collision_influence;
-    // file >> velocity_influence;
-    // file >> position_influence;
-    // file >> center_influence;
-    // file >> acceleration;
-    // file >> max_speed;
-    // file >> swarm_size;   
 
     collision_radius = read_num(file);
     view_radius = read_num(file);
@@ -195,10 +191,6 @@ void World::update(float tslf)
         reload_world = false;
     }
     Window::getCamera()->update(tslf);
-    for (auto sphere : spheres)
-    {
-        // TODO: update sphere
-    }
     water->update(tslf);
 
     for (auto curr_obj : swarm)

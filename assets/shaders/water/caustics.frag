@@ -80,9 +80,9 @@ void main() {
         // Prevent dividing by zero (debug NVidia drivers)
         if (newArea == 0.0) {
         // Arbitrary large value
-        ratio = 2.0e+20;
+            ratio = 2.0e+20;
         } else {
-        ratio = oldArea / newArea;
+            ratio = oldArea / newArea;
         }
 
         causticsIntensity = causticsFactor * ratio;

@@ -5,6 +5,7 @@
 #include "ComputeShader.h"
 #include "Shader.h"
 #include "WaterTexture.h"
+#include "MyTextureLoader.h"
 
 struct GridVertex{
     glm::vec3 pos;
@@ -33,9 +34,13 @@ private:
 
     unsigned int VBO2, VAO2, EBO2;
 
+    unsigned int cubeVAO, cubeVBO;
+
     unsigned int idx=0;
 
-    glm::mat4 model;
+    glm::mat4 model = glm::scale(glm::mat4(1.0f), glm::vec3(30, 30, 30));
+
+    glm::mat4 modelCaustics = glm::translate(glm::scale(glm::mat4(1.0f), glm::vec3(30, 30, 30)), glm::vec3(1,1,1));
 
     ComputeShader *normalCompute;
     ComputeShader *dropCompute;
@@ -45,6 +50,7 @@ private:
     WaterTexture *copyTexture;
 
     Shader *causticsShader;
+    Shader *environmentShader;
 
     bool reloadCompute = false;
     bool reloadShader = false;

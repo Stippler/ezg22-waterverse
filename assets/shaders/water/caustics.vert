@@ -53,7 +53,7 @@ void main() {
     float height = info.x;      
     vec3 normal =  vec3(info.z, sqrt(1.0 - dot(info.ba, info.ba)), info.w);
 
-    trans *= buildTranslation(vec3(-scale/2, height-5+0.8, -scale/2));
+    trans *= buildTranslation(vec3(0, height-5+0.8, 0));
     trans *= buildScaling(vec3(scale, 1, scale));
 
     oldPosition = vec3(trans*vec4(pos, 1.0));

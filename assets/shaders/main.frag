@@ -330,10 +330,11 @@ void main() {
     float cubeFrac = cubeCount/numSamples;
     vec3 cubeColor = vec3(cubeFrac, cubeFrac/2, cubeFrac/3);
 
-    vec3 light = (model_light*0.7+0.5*waterLight);
+    vec3 light = (model_light*0.7+waterLight);
     fragColor = vec4(light, 1);// vec4(light+vec3(0.3, 0.3, 0.3), 1);
-    fragColor = waterAlbedo;
-    // fragColor = vec4(waterLight, 1);
+    // fragColor = (waterAlbedo+backgroundAlbedo)/2;
+    // fragColor = waterAlbedo;
+    // fragColor = backgroundAlbedo;
     // fragColor = vec4(cubeColor, 1);
     // fragColor = vec4(ssao, ssao, ssao, 1);
 }

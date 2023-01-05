@@ -35,19 +35,12 @@ mat4 buildScaling(vec3 delta) {
 }
 
 void main() {
-    mat4 trans = mat4(1.0f);
-
-    float scale = 30;
-
     vec4 info = texture(tex, texCoord);
     float height = info.x;      
     fragNormal =  vec3(info.b, sqrt(1.0 - dot(info.ba, info.ba)), info.a);
 
-    trans *= buildTranslation(vec3(-scale/2, height+15, -scale/2));
-    trans *= buildScaling(vec3(scale, 1, scale));
-
-    fragPos = vec3(trans*vec4(pos, 1.0));
-    gl_Position = projection * view * trans * vec4(pos, 1.0);
+    fragPos = vec3(model*vec4(pos, 1)+vec4(0, height, 0, 0));
+    gl_Position = projection * view * model * vec4(pos, 1.0)+vec4(0, height, 0, 0);
     fragTexCoord = texCoord;
     cubeCoord = pos+vec3(0, -1, 0);
 }
