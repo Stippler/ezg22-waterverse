@@ -20,6 +20,21 @@ set(BUILD_STATIC_LIB ON)
 set(BUILD_ASSIMP_TOOLS  ON)
 set(ASSIMP_BUILD_STATIC_LIB ON)
 
+# irrKlang
+IF (WIN32)
+  # set stuff for windows
+FIND_LIBRARY(IRRKLANG_LIBRARY
+	NAMES libirrklang.dylib
+	PATHS "${CMAKE_CURRENT_SOURCE_DIR}/3rd-parties/irrKlang/lib")
+ELSE()
+  # set stuff for other systems
+FIND_LIBRARY(IRRKLANG_LIBRARY
+	NAMES libIrrKlang.so
+	PATHS "${CMAKE_CURRENT_SOURCE_DIR}/external/irrKlang/lib")
+ENDIF()
+
+INCLUDE_DIRECTORIES("${CMAKE_CURRENT_SOURCE_DIR}/external/irrKlang/include")
+
 add_subdirectory(external/assimp)
 add_subdirectory(external/glew/build/cmake)
 add_subdirectory(external/glfw)

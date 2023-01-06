@@ -23,6 +23,9 @@
 #include <unistd.h>
 #endif
 
+#include <irrKlang.h>
+using namespace irrklang;
+
 // #include "Model.h"
 // #include "AnimatedModel.h"
 
@@ -57,6 +60,8 @@ int main(const int argc, const char **argv)
     // Some computation here
 
     // render loop
+    ISoundEngine *SoundEngine = createIrrKlangDevice();
+    SoundEngine->play2D("assets/ReflectionRTR.wav", true);
     while (!Window::shouldClose())
     {
         auto thisFrame = std::chrono::system_clock::now();

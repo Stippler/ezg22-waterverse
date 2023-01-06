@@ -9,4 +9,4 @@
 1.0 // predator_influence
 15.0 // acceleration
 5.0 // max_speed
-200 // swarm_size
+300 // swarm_size
