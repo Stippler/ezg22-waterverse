@@ -19,6 +19,8 @@
 
 #ifdef _WIN32
 #include <Windows.h>
+#include <mmsystem.h>
+#pragma comment(lib,"winmm.lib")
 #else
 #include <unistd.h>
 #endif
@@ -60,8 +62,12 @@ int main(const int argc, const char **argv)
     // Some computation here
 
     // render loop
+    #ifdef _WIN32
+    PlaySound(TEXT("assets/ReflectionRTR.wav"), NULL, SND_ASYNC);
+    #else
     ISoundEngine *SoundEngine = createIrrKlangDevice();
     SoundEngine->play2D("assets/ReflectionRTR.wav", true);
+    #endif
     while (!Window::shouldClose())
     {
         auto thisFrame = std::chrono::system_clock::now();

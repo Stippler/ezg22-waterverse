@@ -27,7 +27,7 @@ FIND_LIBRARY(IRRKLANG_LIBRARY
 	NAMES libirrklang.dylib
 	PATHS "${CMAKE_CURRENT_SOURCE_DIR}/external/irrKlang/bin/winx64-visualStudio")
 set(IRRKLANG_LINK external/irrKlang/bin/winx64-visualStudio)
-set(IRRKLANG_LIB libIrrKlang.dll)
+set(IRRKLANG_LIB winMM.Lib)
 ELSE()
   # set stuff for other systems
 FIND_LIBRARY(IRRKLANG_LIBRARY
@@ -37,6 +37,8 @@ FIND_LIBRARY(IRRKLANG_LIBRARY
 set(IRRKLANG_LINK external/irrKlang/bin/linux-gcc-64)
 set(IRRKLANG_LIB libIrrKlang.so)
 ENDIF()
+MESSAGE("CMAKE_HOST_SYSTEM_NAME ${IRRKLANG_LIB}")
+MESSAGE("CMAKE_HOST_SYSTEM_VERSION ${CMAKE_HOST_SYSTEM_VERSION}")
 
 INCLUDE_DIRECTORIES("${CMAKE_CURRENT_SOURCE_DIR}/external/irrKlang/include")
 
@@ -92,7 +94,6 @@ target_link_libraries(
     glfw
     glew_s
     glm::glm
-    libIrrKlang.so
     ${IRRKLANG_LIB}
     ${OPENGL_LIBRARIES}
 )
