@@ -13,6 +13,10 @@ static double lastY = 300;
 bool wireframe = false;
 int width = 800;
 int height = 600;
+int windowedPosX;
+int windowedPosY;
+
+bool _fullscreen=false;
 
 // Callbacks
 void mouseMoveCallback(GLFWwindow *window, double xpos, double ypos)
@@ -81,6 +85,38 @@ void Window::setMatrices(Shader *shader)
     shader->setMat4("view", viewMatrix);
     shader->setVec3("viewPos", viewPos);
     // shader->setMat4("model", glm::mat4(1.0f));
+}
+
+void Window::setFullscreen(bool fullscreen)
+{
+    if (fullscreen != _fullscreen)
+    {
+        // Monitor information
+        GLFWmonitor *monitor = glfwGetPrimaryMonitor();
+        const GLFWvidmode *mode = glfwGetVideoMode(monitor);
+
+        _fullscreen = fullscreen;
+        if (fullscreen)
+        {
+            // Save current window position and size
+            glfwGetWindowPos(window, &windowedPosX, &windowedPosY);
+            // Set Fullscreen
+            glfwSetWindowMonitor(window, monitor, 0, 0, mode->width, mode->height, mode->refreshRate);
+        }
+        else
+        {
+            glfwSetWindowMonitor(window, nullptr, windowedPosX, windowedPosY, 800, 600, mode->refreshRate);
+        }
+
+        // if (_vsync)
+        // {
+        //     glfwSwapInterval(1);
+        // }
+        // else
+        // {
+        //     glfwSwapInterval(0);
+        // }
+    }
 }
 
 void Window::setScreenSize(Shader *shader)

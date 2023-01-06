@@ -12,6 +12,7 @@ namespace Window {
     void setMatrices(Shader *shader);
 
     void setScreenSize(Shader *shader);
+    void setFullscreen(bool fullscreen);
 
     float getWidth();
     float getHeight();
