@@ -25,12 +25,17 @@ IF (WIN32)
   # set stuff for windows
 FIND_LIBRARY(IRRKLANG_LIBRARY
 	NAMES libirrklang.dylib
-	PATHS "${CMAKE_CURRENT_SOURCE_DIR}/3rd-parties/irrKlang/lib")
+	PATHS "${CMAKE_CURRENT_SOURCE_DIR}/external/irrKlang/bin/winx64-visualStudio")
+set(IRRKLANG_LINK external/irrKlang/bin/winx64-visualStudio)
+set(IRRKLANG_LIB libIrrKlang.dll)
 ELSE()
   # set stuff for other systems
 FIND_LIBRARY(IRRKLANG_LIBRARY
 	NAMES libIrrKlang.so
-	PATHS "${CMAKE_CURRENT_SOURCE_DIR}/external/irrKlang/lib")
+	PATHS "${CMAKE_CURRENT_SOURCE_DIR}/external/irrKlang/bin/linux-gcc-64")
+
+set(IRRKLANG_LINK external/irrKlang/bin/linux-gcc-64)
+set(IRRKLANG_LIB libIrrKlang.so)
 ENDIF()
 
 INCLUDE_DIRECTORIES("${CMAKE_CURRENT_SOURCE_DIR}/external/irrKlang/include")
@@ -78,6 +83,7 @@ target_include_directories(
 target_link_directories(
     ${PROJECT_NAME} PRIVATE 
     external/glfw/src
+    ${IRRKLANG_LINK}
 )
 
 target_link_libraries(
@@ -86,6 +92,8 @@ target_link_libraries(
     glfw
     glew_s
     glm::glm
+    libIrrKlang.so
+    ${IRRKLANG_LIB}
     ${OPENGL_LIBRARIES}
 )
 
