@@ -63,7 +63,7 @@ int main(const int argc, const char **argv)
 
     // render loop
     #ifdef _WIN32
-    PlaySound(TEXT("assets/ReflectionRTR.wav"), NULL, SND_ASYNC);
+    PlaySound(TEXT("assets/ReflectionRTR.wav"), NULL, SND_LOOP | SND_ASYNC);
     #else
     ISoundEngine *SoundEngine = createIrrKlangDevice();
     SoundEngine->play2D("assets/ReflectionRTR.wav", true);
