@@ -234,7 +234,8 @@ void AnimatedModel::getBoneTransforms(float TimeInSeconds, vector<aiMatrix4x4> &
     // std::cout << "Bone info size: " << m_BoneInfo.size() << std::endl;
     aiMatrix4x4 Identity = aiMatrix4x4();
 
-    float TicksPerSecond = (float)(pScene->mAnimations[0]->mTicksPerSecond != 0 ? pScene->mAnimations[0]->mTicksPerSecond : 25.0f);
+    //float TicksPerSecond = (float)(pScene->mAnimations[0]->mTicksPerSecond != 0 ? pScene->mAnimations[0]->mTicksPerSecond : 25.0f);
+    float TicksPerSecond = 60.0f;
     float TimeInTicks = TimeInSeconds * TicksPerSecond;
     float AnimationTimeTicks = fmod(TimeInTicks, (float)pScene->mAnimations[0]->mDuration);
     ReadNodeHierarchy(AnimationTimeTicks, pScene->mRootNode, Identity);

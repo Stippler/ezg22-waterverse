@@ -11,7 +11,7 @@ namespace World
     void init();
     void free();
 
-    GameObject *addGameObject(std::string model, glm::vec3 pos = glm::vec3(0.0f), float scale = 1.0f);
+    GameObject *addGameObject(std::string model, bool animated = false, glm::vec3 pos = glm::vec3(0.0f), float scale = 1.0f);
 
     void update(float tslf);
     void renderGameObjects(Shader *shader);

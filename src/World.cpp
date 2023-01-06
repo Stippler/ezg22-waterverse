@@ -52,7 +52,8 @@ bool reload_world = false;
 void World::init()
 {
     animatedModelMap.emplace("whiteshark", new AnimatedModel("assets/models/whiteshark/WhiteShark.gltf", glm::vec3(0, 0, 1.0f)));
-    animatedModelMap.emplace("fish", new AnimatedModel("assets/models/guppy-fish/Guppy.gltf", glm::vec3(0, 0, -1.0f)));
+    //animatedModelMap.emplace("fish", new AnimatedModel("assets/models/guppy-fish/Guppy.gltf", glm::vec3(0, 0, -1.0f)));
+    animatedModelMap.emplace("fish", new AnimatedModel("assets/models/lowpoly-fish/lowfish.gltf", glm::vec3(0.0f, -1.0f, 0.0f)));
     // animatedModelMap.emplace("manta", new AnimatedModel("assets/models/manta/scene.gltf", glm::vec3(0, -1.0f, 0)));
     staticModelMap.emplace("crate", new AnimatedModel("assets/models/Crate/Crate1.obj"));
     staticModelMap.emplace("ground", new AnimatedModel("assets/models/floor/floor.obj"));
@@ -130,7 +131,7 @@ void World::reload()
 
     World::clear();
     // World::addGameObject("sphere", glm::vec3(0, 3, 0));
-    auto go = World::addGameObject("whiteshark", glm::vec3(0, -8, 0), 0.4f);
+    auto go = World::addGameObject("whiteshark", true, glm::vec3(0, -8, 0), 0.4f);
     go->velocity=glm::vec3(1, 0, 1);
     predators.push_back(go);
     // auto sphere = World::addGameObject("sphere", glm::vec3(0, 1, 0));
@@ -144,10 +145,10 @@ void World::reload()
         float x = static_cast<float>(rand()) / static_cast<float>(RAND_MAX) - 0.5;
         float y = static_cast<float>(rand()) / static_cast<float>(RAND_MAX) - 0.5;
         float z = static_cast<float>(rand()) / static_cast<float>(RAND_MAX) - 0.5;
-        GameObject *fish = World::addGameObject("fish", glm::vec3(x * gridSize, y * gridSize, z * gridSize), .1f);
+        GameObject *fish = World::addGameObject("fish", false, glm::vec3(x * gridSize, y * gridSize, z * gridSize), .2f);
         swarm.push_back(fish);
     }
-    World::addGameObject("ground", glm::vec3(0, -15 + 0.966666, 0), 0.9666666);
+    World::addGameObject("ground", false, glm::vec3(0, -15 + 0.966666, 0), 0.9666666);
 }
 
 void World::renderGameObjects(Shader *shader)
@@ -356,11 +357,11 @@ void World::clear()
     predators.clear();
 }
 
-GameObject *World::addGameObject(std::string model, glm::vec3 pos, float scale)
+GameObject *World::addGameObject(std::string model, bool animated, glm::vec3 pos, float scale)
 {
     if (staticModelMap.find(model) != staticModelMap.end())
     {
-        GameObject *gameObject = new GameObject(staticModelMap.at(model), false);
+        GameObject *gameObject = new GameObject(staticModelMap.at(model), animated);
         gameObject->pos = pos;
         gameObject->scale = scale;
         staticObjects.push_back(gameObject);
@@ -368,7 +369,7 @@ GameObject *World::addGameObject(std::string model, glm::vec3 pos, float scale)
     }
     else if (animatedModelMap.find(model) != animatedModelMap.end())
     {
-        GameObject *gameObject = new GameObject(animatedModelMap.at(model), true);
+        GameObject *gameObject = new GameObject(animatedModelMap.at(model), animated);
         gameObject->pos = pos;
         gameObject->scale = scale;
         animatedObjects.push_back(gameObject);
