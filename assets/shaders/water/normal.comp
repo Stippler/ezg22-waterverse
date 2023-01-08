@@ -22,9 +22,9 @@ void main() {
 
   // TODO: set width/height properly
   float val1 = imageLoad(imgInput, texelCoord+offset.xz).r-info.r;
-  vec3 dx = vec3(1.0/256.0, val1, 0.0);
+  vec3 dx = vec3(1.0/128.0, val1, 0.0);
   float val2 = imageLoad(imgInput, texelCoord+offset.zy).r- info.r;
-  vec3 dy = vec3(0.0, val2, 1.0/256.0);
+  vec3 dy = vec3(0.0, val2, 1.0/128.0);
   info.ba = normalize(cross(dy, dx)).xz;
 
   imageStore(imgOutput, texelCoord, info);

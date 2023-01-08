@@ -281,7 +281,7 @@ void main() {
         model_light *= vec3(causticsIntensityR, causticsIntensityG, causticsIntensityB);
     }
 
-    float maxRaySize = 100;
+    float maxRaySize = 70;
     float rayLength;
     float hitModel=0.0;
     if(modelNormal == vec4(0, 0, 0, 1)) {
@@ -297,7 +297,7 @@ void main() {
     }
 
     vec3 curPos = viewPos;
-    int totalSamples = 1000;
+    int totalSamples = 500;
     float numSamples = totalSamples*(rayLength/maxRaySize);
     float cubeCount = 0;
     float shadowCount = 0;

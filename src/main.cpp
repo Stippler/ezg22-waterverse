@@ -68,7 +68,8 @@ int main(const int argc, const char **argv)
     ISoundEngine *SoundEngine = createIrrKlangDevice();
     SoundEngine->play2D("assets/ReflectionRTR.wav", true);
     #endif
-    // TODO: Window::setFullscreen(true);
+    // TODO: 
+    Window::setFullscreen(true);
     while (!Window::shouldClose())
     {
         auto thisFrame = std::chrono::system_clock::now();
@@ -91,6 +92,8 @@ int main(const int argc, const char **argv)
     World::free();
     Renderer::free();
     FileWatcher::stop();
+
+    SoundEngine->drop();
 
     return 0;
 }
