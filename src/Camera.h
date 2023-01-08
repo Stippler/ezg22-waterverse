@@ -226,7 +226,7 @@ private:
     float movementSpeed = 30.0f;
 
     float time=0.0f;
-    bool automatic = false;
+    bool automatic = true;
 
     CameraMovement *movement;
     bool reloadMovement;
