@@ -16,7 +16,7 @@ struct GridVertex
 class Water
 {
 public:
-    Water(unsigned int width = 128, unsigned int height = 128);
+    Water(unsigned int width = 256, unsigned int height = 256);
     ~Water();
 
     void addDrop(glm::vec2 center, float radius, float strength);

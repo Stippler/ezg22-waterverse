@@ -93,7 +93,9 @@ int main(const int argc, const char **argv)
     Renderer::free();
     FileWatcher::stop();
 
+    #ifndef _WIN32
     SoundEngine->drop();
+    #endif _WIN32
 
     return 0;
 }
