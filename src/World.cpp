@@ -156,14 +156,26 @@ void World::renderGameObjects(Shader *shader)
     shader->use();
     Window::setMatrices(shader);
 
-    shader->setInt("animated", 0);
+    
     for (auto go : World::getStaticObjects())
     {
+        if(go->animated == true){
+            shader->setInt("animated", 1);
+        }
+        else{
+            shader->setInt("animated", 0);
+        }
         go->render(shader);
     }
-    shader->setInt("animated", 1);
+
     for (auto go : World::getAnimatedObjects())
     {
+        if(go->animated == true){
+            shader->setInt("animated", 1);
+        }
+        else{
+            shader->setInt("animated", 0);
+        }
         go->render(shader);
     }
 }

@@ -20,11 +20,10 @@ public:
     float time = 0.0f;
 
     void render(Shader *shader);
-
+    bool animated = false;
     // void setPos(glm::vec3 pos);
     // void setRot(glm::vec3 rot);
 private:
     glm::mat4 modelMatrix;
     AnimatedModel *model;
-    bool animated = false;
 };

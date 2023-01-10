@@ -68,6 +68,7 @@ int main(const int argc, const char **argv)
     ISoundEngine *SoundEngine = createIrrKlangDevice();
     SoundEngine->play2D("assets/ReflectionRTR.wav", true);
     #endif
+    // TODO: 
     Window::setFullscreen(true);
     while (!Window::shouldClose())
     {
@@ -91,6 +92,10 @@ int main(const int argc, const char **argv)
     World::free();
     Renderer::free();
     FileWatcher::stop();
+
+    #ifndef _WIN32
+    SoundEngine->drop();
+    #endif _WIN32
 
     return 0;
 }
