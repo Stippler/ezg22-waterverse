@@ -54,6 +54,8 @@ Water::Water(unsigned int width, unsigned int height) : width(width), height(hei
                      { reloadCompute = true; });
     FileWatcher::add("assets/shaders/water/drop.comp", [&]()
                      { reloadCompute = true; });
+    FileWatcher::add("assets/drops.txt", [&]()
+                     { reloadDrops = true; });
 
     /****************
      * WATER SURFACE *
@@ -117,40 +119,40 @@ Water::Water(unsigned int width, unsigned int height) : width(width), height(hei
      *****************/
     float cubeVertices[] = {
         // positions          // normals
-        -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
-         0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
-         0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
-         0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
-        -0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
-        -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+        -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
+        0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
+        0.5f, 0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
+        0.5f, 0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
+        -0.5f, 0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
+        -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
 
-        -0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
-         0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
-         0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
-         0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
-        -0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
-        -0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+        -0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f,
+        0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f,
+        0.5f, 0.5f, 0.5f, 0.0f, 0.0f, 1.0f,
+        0.5f, 0.5f, 0.5f, 0.0f, 0.0f, 1.0f,
+        -0.5f, 0.5f, 0.5f, 0.0f, 0.0f, 1.0f,
+        -0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f,
 
-        -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
-        -0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
-        -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
-        -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
-        -0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
-        -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+        -0.5f, 0.5f, 0.5f, -1.0f, 0.0f, 0.0f,
+        -0.5f, 0.5f, -0.5f, -1.0f, 0.0f, 0.0f,
+        -0.5f, -0.5f, -0.5f, -1.0f, 0.0f, 0.0f,
+        -0.5f, -0.5f, -0.5f, -1.0f, 0.0f, 0.0f,
+        -0.5f, -0.5f, 0.5f, -1.0f, 0.0f, 0.0f,
+        -0.5f, 0.5f, 0.5f, -1.0f, 0.0f, 0.0f,
 
-         0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
-         0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
-         0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
-         0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
-         0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
-         0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+        0.5f, 0.5f, 0.5f, 1.0f, 0.0f, 0.0f,
+        0.5f, 0.5f, -0.5f, 1.0f, 0.0f, 0.0f,
+        0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 0.0f,
+        0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 0.0f,
+        0.5f, -0.5f, 0.5f, 1.0f, 0.0f, 0.0f,
+        0.5f, 0.5f, 0.5f, 1.0f, 0.0f, 0.0f,
 
-        -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
-         0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
-         0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
-         0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
-        -0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
-        -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+        -0.5f, -0.5f, -0.5f, 0.0f, -1.0f, 0.0f,
+        0.5f, -0.5f, -0.5f, 0.0f, -1.0f, 0.0f,
+        0.5f, -0.5f, 0.5f, 0.0f, -1.0f, 0.0f,
+        0.5f, -0.5f, 0.5f, 0.0f, -1.0f, 0.0f,
+        -0.5f, -0.5f, 0.5f, 0.0f, -1.0f, 0.0f,
+        -0.5f, -0.5f, -0.5f, 0.0f, -1.0f, 0.0f,
 
         // -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
         //  0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
@@ -198,12 +200,36 @@ Water::Water(unsigned int width, unsigned int height) : width(width), height(hei
         std::cout << "Framebuffer not complete!" << std::endl;
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    reload();
 }
 
 Water::~Water()
 {
     delete texture;
     delete copyTexture;
+}
+
+void Water::reload()
+{
+    std::ifstream file;
+    file.open("assets/drops.txt");
+    int count;
+    drops.clear();
+    float totalDropTime_;
+    file >> count;
+    file >> totalDropTime_;
+    for (int i = 0; i < count; i++)
+    {
+        Drop drop;
+        file >> drop.start;
+        file >> drop.center.x;
+        file >> drop.center.y;
+        file >> drop.radius;
+        file >> drop.strength;
+        drops.push_back(drop);
+    }
+    totalDropTime = totalDropTime_;
 }
 
 void Water::update(float tslf)
@@ -217,22 +243,33 @@ void Water::update(float tslf)
         std::cout << "reload test computing shader" << std::endl;
         reloadCompute = false;
     }
-    static int ledl = 0;
-
-    if (ledl % 500 == 0)
+    if (reloadDrops)
     {
-        addDrop(glm::vec2(0.5, 0.8), 0.1, 10);
+        reload();
+        std::cout << "reload drops" << std::endl;
+        reloadDrops = false;
     }
-    ledl++;
 
-    // stepSimulation();
+    totalTimer+=tslf;
     bool updated = false;
     timer += tslf;
     while (timer > tick)
     {
+        dropTimer = dropTimer + tick;
+        if (dropTimer > totalDropTime)
+        {
+            dropIndex = 0;
+            dropTimer = fmod(dropTimer, totalDropTime);
+        }
+        while (dropIndex < drops.size() && drops[dropIndex].start < dropTimer)
+        {
+            Drop drop = drops[dropIndex];
+            addDrop(drop.center, drop.radius, drop.strength);
+            dropIndex++;
+        }
         stepSimulation();
         timer -= tick;
-        updated=true;
+        updated = true;
     }
     if (updated)
     {
@@ -252,7 +289,7 @@ void Water::render(Shader *waterShader)
         reloadShader = false;
     }
 
-    unsigned int cubemapTexture = MyTextureLoader::getCubemap("skybox");
+    unsigned int cubemapTexture = MyTextureLoader::getCubemap(World::getTime());
 
     // bind textures
     waterShader->use();

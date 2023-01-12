@@ -32,4 +32,5 @@ namespace World
     DirLight *getDirLight();
     void reload();
     void clear();
+    float getTime();
 }

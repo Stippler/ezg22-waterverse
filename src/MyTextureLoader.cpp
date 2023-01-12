@@ -1,19 +1,61 @@
 #include "MyTextureLoader.h"
+#include "FileWatcher.h"
+
+#include <fstream>
+#include <string>
 
 namespace MyTextureLoader
 {
     std::unordered_map<std::string, unsigned int> textures;
+    bool reloadTexture = false;
+    std::vector<float> times;
+    std::vector<std::string> cubeMaps;
+
+    void reload()
+    {
+        std::ifstream file;
+        file.open("assets/background.txt");
+
+        int count;
+        file >> count;
+
+        std::vector<std::string> cubeMaps_;
+        std::vector<float> times_;
+        for (int i = 0; i < count; i++)
+        {
+            float time;
+            file >> time;
+            std::string cubemap;
+            file >> cubemap;
+            cubeMaps_.push_back(cubemap);
+            times_.push_back(time);
+        }
+        times=times_;
+        cubeMaps=cubeMaps_;
+        file.close();
+    }
 
     void init()
     {
         std::vector<std::string> faces = {
-            "assets/skybox/right.jpeg",
-            "assets/skybox/left.jpeg",
-            "assets/skybox/top.jpeg",
-            "assets/skybox/bottom.jpeg",
-            "assets/skybox/front.jpeg",
-            "assets/skybox/back.jpeg"};
-        textures.emplace("skybox", loadCubemap(faces));
+            "assets/day/right.jpeg",
+            "assets/day/left.jpeg",
+            "assets/day/top.jpeg",
+            "assets/day/bottom.jpeg",
+            "assets/day/front.jpeg",
+            "assets/day/back.jpeg"};
+        textures.emplace("day", loadCubemap(faces));
+        faces = {
+            "assets/night/right.jpeg",
+            "assets/night/left.jpeg",
+            "assets/night/top.jpeg",
+            "assets/night/bottom.jpeg",
+            "assets/night/front.jpeg",
+            "assets/night/back.jpeg"};
+        textures.emplace("night", loadCubemap(faces));
+        FileWatcher::add("assets/background.txt", [&]
+                         { reloadTexture = true; });
+        reload();
     }
 
     unsigned int getTexture(std::string path)
@@ -52,9 +94,24 @@ namespace MyTextureLoader
         return texture;
     }
 
-    unsigned int getCubemap(std::string cubeMap)
+    unsigned int getCubemap(float timer)
     {
-        return textures.at(cubeMap);
+        if (reloadTexture)
+        {
+            reload();
+        }
+        int i = 0;
+        float count = times[0];
+        while (timer > count)
+        {
+            if (i + 1 == times.size())
+            {
+                break;
+            }
+            i += 1;
+            count += times[i];
+        }
+        return textures.at(cubeMaps[i]);
     }
 
     unsigned int loadCubemap(std::vector<std::string> faces)

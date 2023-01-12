@@ -46,13 +46,15 @@ float max_speed = 5.0f;
 int swarm_size = 50;
 bool reload_world = false;
 
+float worldTime = 0.0f;
+
 // std::vector<AnimatedModel *> models;
 // std::vector<Cube*> cubes;
 
 void World::init()
 {
     animatedModelMap.emplace("whiteshark", new AnimatedModel("assets/models/whiteshark/WhiteShark.gltf", glm::vec3(0, 0, 1.0f)));
-    //animatedModelMap.emplace("fish", new AnimatedModel("assets/models/guppy-fish/Guppy.gltf", glm::vec3(0, 0, -1.0f)));
+    // animatedModelMap.emplace("fish", new AnimatedModel("assets/models/guppy-fish/Guppy.gltf", glm::vec3(0, 0, -1.0f)));
     animatedModelMap.emplace("fish", new AnimatedModel("assets/models/lowpoly-fish/lowfish.gltf", glm::vec3(0.0f, -1.0f, 0.0f)));
     // animatedModelMap.emplace("manta", new AnimatedModel("assets/models/manta/scene.gltf", glm::vec3(0, -1.0f, 0)));
     staticModelMap.emplace("crate", new AnimatedModel("assets/models/Crate/Crate1.obj"));
@@ -70,6 +72,11 @@ void World::init()
     World::reload();
     FileWatcher::add("assets/swarm.txt", [&]
                      { reload_world = true; });
+}
+
+float World::getTime()
+{
+    return worldTime;
 }
 
 float read_num(std::ifstream &file)
@@ -132,7 +139,7 @@ void World::reload()
     World::clear();
     // World::addGameObject("sphere", glm::vec3(0, 3, 0));
     auto go = World::addGameObject("whiteshark", true, glm::vec3(0, -8, 0), 0.4f);
-    go->velocity=glm::vec3(1, 0, 1);
+    go->velocity = glm::vec3(1, 0, 1);
     predators.push_back(go);
     // auto sphere = World::addGameObject("sphere", glm::vec3(0, 1, 0));
     // auto manta = World::addGameObject("manta", glm::vec3(0, -8, 5), 2.0f);
@@ -156,13 +163,14 @@ void World::renderGameObjects(Shader *shader)
     shader->use();
     Window::setMatrices(shader);
 
-    
     for (auto go : World::getStaticObjects())
     {
-        if(go->animated == true){
+        if (go->animated == true)
+        {
             shader->setInt("animated", 1);
         }
-        else{
+        else
+        {
             shader->setInt("animated", 0);
         }
         go->render(shader);
@@ -170,10 +178,12 @@ void World::renderGameObjects(Shader *shader)
 
     for (auto go : World::getAnimatedObjects())
     {
-        if(go->animated == true){
+        if (go->animated == true)
+        {
             shader->setInt("animated", 1);
         }
-        else{
+        else
+        {
             shader->setInt("animated", 0);
         }
         go->render(shader);
@@ -200,6 +210,7 @@ void World::renderCaustics(unsigned int environment)
 
 void World::update(float tslf)
 {
+    worldTime += tslf;
     if (reload_world)
     {
         World::reload();

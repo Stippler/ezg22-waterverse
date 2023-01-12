@@ -3,6 +3,7 @@
 #include "MyTextureLoader.h"
 #include "Shader.h"
 #include "Window.h"
+#include "World.h"
 
 struct SkyBoxGBuffer
 {
@@ -128,6 +129,9 @@ struct SkyBoxGBuffer
         // glFrontFace(GL_CW);
         glEnable(GL_CULL_FACE);
 
+
+        unsigned int cubemapTexture = MyTextureLoader::getCubemap(World::getTime());
+
         // set shader stuff
         shader->use();
         glm::mat4 proj = glm::perspective(glm::radians(45.0f), (float)Window::getWidth() / (float)Window::getHeight(), 0.1f, 100.0f);
@@ -135,7 +139,7 @@ struct SkyBoxGBuffer
         shader->setMat4("projection", proj);
         glm::mat4 view = glm::mat4(glm::mat3(Window::getCamera()->getViewMatrix()));
         shader->setMat4("view", view);
-        unsigned int skyboxTexture = MyTextureLoader::getTexture("skybox");
+        unsigned int skyboxTexture = MyTextureLoader::getCubemap(World::getTime());
 
         // render
         glBindVertexArray(VAO);

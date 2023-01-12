@@ -17,7 +17,7 @@ namespace MyTextureLoader
     void init();
 
     unsigned int getTexture(std::string path);
-    unsigned int getCubemap(std::string cubeMap);
+    unsigned int getCubemap(float timer);
     unsigned int loadCubemap(std::vector<std::string> faces);
 
 };
