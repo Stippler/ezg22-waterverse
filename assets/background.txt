@@ -1,10 +1,9 @@
-9
-0 day
-1 night
-2 day
-3 night
-4 day
-5 night
-6 day
-7 night
-8 day
+8
+39.2 night
+11.6 day
+15.6 night
+27.2 day
+39.2 night
+11.6 day
+15.6 night
+27.2 day
