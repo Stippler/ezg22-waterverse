@@ -153,10 +153,10 @@ void Window::processInput()
         {
             camera->setAuto(true);
         }
-        /*else
+        else
         {
             camera->setAuto(false);
-        }*/
+        }
         if (glfwGetKey(glfWwindow, GLFW_KEY_W) == GLFW_PRESS)
         {
             camera->moveForward(deltaTime);

@@ -222,17 +222,19 @@ void World::update(float tslf)
     for (auto predator : predators)
     {
         glm::vec3 dir = glm::normalize(predator->velocity) * 0.4f;
-        if (glm::length(predator->pos) > 13)
-        {
-            dir += glm::normalize(-predator->pos) * 5.0f;
-        }
+        //if (glm::length(predator->pos) > 13)
+        //{
+        dir += glm::normalize(-predator->pos) * 0.5f * glm::length(predator->pos)/14.0f;
+        glm::vec3 updown=glm::vec3(0, -predator->pos.y, 0);
+        dir +=  glm::normalize(updown)* 0.2f  * glm::length(updown);
+        //}
         float r1 = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
         float r2 = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
         float r3 = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
         dir += glm::normalize(glm::vec3(r1, r2, r3)) * 0.1f;
 
         dir = glm::normalize(dir);
-        predator->velocity += acceleration * dir * tslf;
+        predator->velocity += 5.0f * dir * tslf;
 
         float speed = glm::length(predator->velocity);
         if (speed > 5)
