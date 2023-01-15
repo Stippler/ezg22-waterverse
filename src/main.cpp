@@ -60,7 +60,8 @@ int main(const int argc, const char **argv)
     Renderer::init();
     auto lastFrame = std::chrono::system_clock::now();
     // Some computation here
-
+    
+    Window::setFullscreen(true);
     // render loop
     #ifdef _WIN32
     PlaySound(TEXT("assets/ReflectionRTR.wav"), NULL, SND_LOOP | SND_ASYNC);
@@ -69,7 +70,6 @@ int main(const int argc, const char **argv)
     SoundEngine->play2D("assets/ReflectionRTR.wav", true);
     #endif
     // TODO: 
-    // Window::setFullscreen(true);
     while (!Window::shouldClose())
     {
         auto thisFrame = std::chrono::system_clock::now();
