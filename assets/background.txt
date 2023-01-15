@@ -1,4 +1,6 @@
-8
+9
+4.0 night
+11.8 day
 39.2 night
 11.6 day
 15.6 night
