@@ -149,13 +149,13 @@ void Window::processInput()
         //     std::cout << "break" <<
         // }
 
-        if (glfwGetKey(glfWwindow, GLFW_KEY_F5) == GLFW_PRESS)
+        if (glfwGetKey(glfWwindow, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
         {
-            camera->setAuto(true);
+            camera->setAuto(false);
         }
         else
         {
-            camera->setAuto(false);
+            camera->setAuto(true);
         }
         if (glfwGetKey(glfWwindow, GLFW_KEY_W) == GLFW_PRESS)
         {

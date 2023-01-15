@@ -60,7 +60,8 @@ int main(const int argc, const char **argv)
     Renderer::init();
     auto lastFrame = std::chrono::system_clock::now();
     // Some computation here
-
+    
+    Window::setFullscreen(true);
     // render loop
     #ifdef _WIN32
     PlaySound(TEXT("assets/ReflectionRTR.wav"), NULL, SND_LOOP | SND_ASYNC);
